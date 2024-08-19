@@ -88,3 +88,39 @@ func (sdk *AtlasSdk) getEthClient(chainId uint64) (*ethclient.Client, error) {
 
 	return client, nil
 }
+
+func (sdk *AtlasSdk) GetAtlasContract(chainId uint64) (*atlas.Atlas, error) {
+	contract, ok := sdk.atlasContract[chainId]
+	if !ok {
+		return nil, fmt.Errorf("atlas contract not found for chain id %d", chainId)
+	}
+
+	return contract, nil
+}
+
+func (sdk *AtlasSdk) GetAtlasVerificationContract(chainId uint64) (*atlasverification.AtlasVerification, error) {
+	contract, ok := sdk.atlasVerificationContract[chainId]
+	if !ok {
+		return nil, fmt.Errorf("atlas verification contract not found for chain id %d", chainId)
+	}
+
+	return contract, nil
+}
+
+func (sdk *AtlasSdk) GetSimulatorContract(chainId uint64) (*simulator.Simulator, error) {
+	contract, ok := sdk.simulatorContract[chainId]
+	if !ok {
+		return nil, fmt.Errorf("simulator contract not found for chain id %d", chainId)
+	}
+
+	return contract, nil
+}
+
+func (sdk *AtlasSdk) GetSorterContract(chainId uint64) (*sorter.Sorter, error) {
+	contract, ok := sdk.sorterContract[chainId]
+	if !ok {
+		return nil, fmt.Errorf("sorter contract not found for chain id %d", chainId)
+	}
+
+	return contract, nil
+}

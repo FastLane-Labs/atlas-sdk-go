@@ -247,6 +247,12 @@ func (s SolverOperations) EncodeToRaw() SolverOperationsRaw {
 	return solverOps
 }
 
+func (s SolverOperations) Sanitize() {
+	for _, solverOp := range s {
+		solverOp.Sanitize()
+	}
+}
+
 func (s SolverOperationsRaw) Decode() SolverOperations {
 	solverOps := make([]*SolverOperation, len(s))
 	for i, solverOp := range s {
