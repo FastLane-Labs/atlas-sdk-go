@@ -23,17 +23,5 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt update && sudo apt install build-essential
 
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/Library/Caches/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: ${{ runner.os }}-go-
-
-      - name: Build
-        run: CGO_ENABLED=0 GOOS=linux go build -o ./atlas-sdk-go
-
       - name: Test
         run: make test
