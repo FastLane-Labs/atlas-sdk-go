@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -22,6 +23,8 @@ type ChainConfig struct {
 }
 
 var (
+	DEFAULT_MULTICALL3 = common.HexToAddress("0xcA11bde05977b3631167028862bE2a173976CA11")
+
 	chainConfig = map[uint64]*ChainConfig{
 		// Unit tests
 		0: {
@@ -40,7 +43,7 @@ var (
 				AtlasVerification: common.HexToAddress("0xB6F66a1b7cec02324D83c8DEA192818cA23A08B3"),
 				Sorter:            common.HexToAddress("0xFE3c655d4D305Ac7f1c2F6306C79397560Afea0C"),
 				Simulator:         common.HexToAddress("0xc3ab39ebd49D80bc36208545021224BAF6d2Bdb0"),
-				Multicall3:        common.HexToAddress("0xcA11bde05977b3631167028862bE2a173976CA11"),
+				Multicall3:        DEFAULT_MULTICALL3,
 			},
 			Eip712Domain: &apitypes.TypedDataDomain{
 				Name:              "AtlasVerification",
@@ -57,7 +60,7 @@ var (
 				AtlasVerification: common.HexToAddress("0xA462C35C43355928F114144AD20AddD6Bb09b52f"),
 				Sorter:            common.HexToAddress("0x0cb4cCc7C853BA2CeA8bc8cB2ECF8142dF67BF79"),
 				Simulator:         common.HexToAddress("0x7f9227d40590D473D9FdD855C506f2D6400687Cb"),
-				Multicall3:        common.HexToAddress("0xcA11bde05977b3631167028862bE2a173976CA11"),
+				Multicall3:        DEFAULT_MULTICALL3,
 			},
 			Eip712Domain: &apitypes.TypedDataDomain{
 				Name:              "AtlasVerification",
@@ -74,7 +77,7 @@ var (
 				AtlasVerification: common.HexToAddress("0x3b7B38362bB7E2F000Cd2432343F3483F785F435"),
 				Sorter:            common.HexToAddress("0xa55051bd82eFeA1dD487875C84fE9c016859659B"),
 				Simulator:         common.HexToAddress("0x3efbaBE0ee916A4677D281c417E895a3e7411Ac2"),
-				Multicall3:        common.HexToAddress("0xcA11bde05977b3631167028862bE2a173976CA11"),
+				Multicall3:        DEFAULT_MULTICALL3,
 			},
 			Eip712Domain: &apitypes.TypedDataDomain{
 				Name:              "AtlasVerification",
@@ -91,7 +94,7 @@ var (
 				AtlasVerification: common.HexToAddress("0xae631aCDC436b9Dfd75C5629F825330d91459445"),
 				Sorter:            common.HexToAddress("0xb47387995e866908B25b49e8BaC7e499170461A6"),
 				Simulator:         common.HexToAddress("0xAb665f032e6A20Ef7D43FfD4E92a2f4fd6d5771e"),
-				Multicall3:        common.HexToAddress("0xcA11bde05977b3631167028862bE2a173976CA11"),
+				Multicall3:        DEFAULT_MULTICALL3,
 			},
 			Eip712Domain: &apitypes.TypedDataDomain{
 				Name:              "AtlasVerification",
@@ -111,8 +114,53 @@ func GetChainConfig(chainId uint64) (*ChainConfig, error) {
 	return chainConfig[chainId], nil
 }
 
-func OverrideChainConfig(chainId uint64, config *ChainConfig) {
+func OverrideChainConfig(chainId uint64, config *ChainConfig) error {
+	if config.Contract == nil {
+		return errors.New("contract config is required")
+	}
+
+	if config.Contract.Atlas == (common.Address{}) {
+		return errors.New("atlas contract address is required")
+	}
+
+	if config.Contract.AtlasVerification == (common.Address{}) {
+		return errors.New("atlas verification contract address is required")
+	}
+
+	if config.Contract.Sorter == (common.Address{}) {
+		return errors.New("sorter contract address is required")
+	}
+
+	if config.Contract.Simulator == (common.Address{}) {
+		return errors.New("simulator contract address is required")
+	}
+
+	if config.Contract.Multicall3 == (common.Address{}) {
+		config.Contract.Multicall3 = DEFAULT_MULTICALL3
+	}
+
+	if config.Eip712Domain == nil {
+		return errors.New("eip712 domain is required")
+	}
+
+	if len(config.Eip712Domain.Name) == 0 {
+		return errors.New("eip712 domain name is required")
+	}
+
+	if len(config.Eip712Domain.Version) == 0 {
+		return errors.New("eip712 domain version is required")
+	}
+
+	if config.Eip712Domain.ChainId == nil {
+		return errors.New("eip712 domain chain id is required")
+	}
+
+	if common.IsHexAddress(config.Eip712Domain.VerifyingContract) {
+		return errors.New("eip712 domain verifying contract is required")
+	}
+
 	chainConfig[chainId] = config
+	return nil
 }
 
 func GetAtlasAddress(chainId uint64) (common.Address, error) {
