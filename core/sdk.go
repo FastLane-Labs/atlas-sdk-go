@@ -27,7 +27,14 @@ type AtlasSdk struct {
 	noncesMu                   sync.Mutex
 }
 
-func NewAtlasSdk(ethClient []*ethclient.Client) (*AtlasSdk, error) {
+func NewAtlasSdk(ethClient []*ethclient.Client, chainOverrides map[uint64]*config.ChainConfig) (*AtlasSdk, error) {
+	for chainId, chainConf := range chainOverrides {
+		err := config.OverrideChainConfig(chainId, chainConf)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	sdk := &AtlasSdk{
 		ethClient:                  make(map[uint64]*ethclient.Client),
 		atlasContract:              make(map[uint64]*atlas.Atlas),
