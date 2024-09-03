@@ -23,18 +23,32 @@ type AtlasSdk struct {
 	simulatorContract         map[uint64]*simulator.Simulator
 	sorterContract            map[uint64]*sorter.Sorter
 
+	userLastSequentialNonce    map[uint64]map[common.Address]*big.Int
 	userLastNonSequentialNonce map[uint64]map[common.Address]*big.Int
-	noncesMu                   sync.Mutex
+	dAppLastSequentialNonce    map[uint64]map[common.Address]*big.Int
+
+	mu       sync.Mutex
+	noncesMu map[uint64]map[common.Address]*sync.Mutex
 }
 
-func NewAtlasSdk(ethClient []*ethclient.Client) (*AtlasSdk, error) {
+func NewAtlasSdk(ethClient []*ethclient.Client, chainOverrides map[uint64]*config.ChainConfig) (*AtlasSdk, error) {
+	for chainId, chainConf := range chainOverrides {
+		err := config.OverrideChainConfig(chainId, chainConf)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	sdk := &AtlasSdk{
 		ethClient:                  make(map[uint64]*ethclient.Client),
 		atlasContract:              make(map[uint64]*atlas.Atlas),
 		atlasVerificationContract:  make(map[uint64]*atlasverification.AtlasVerification),
 		simulatorContract:          make(map[uint64]*simulator.Simulator),
 		sorterContract:             make(map[uint64]*sorter.Sorter),
+		userLastSequentialNonce:    make(map[uint64]map[common.Address]*big.Int),
 		userLastNonSequentialNonce: make(map[uint64]map[common.Address]*big.Int),
+		dAppLastSequentialNonce:    make(map[uint64]map[common.Address]*big.Int),
+		noncesMu:                   make(map[uint64]map[common.Address]*sync.Mutex),
 	}
 
 	for _, client := range ethClient {
@@ -74,7 +88,10 @@ func NewAtlasSdk(ethClient []*ethclient.Client) (*AtlasSdk, error) {
 		sdk.atlasVerificationContract[chainIdUint64] = atlasVerificationContract
 		sdk.simulatorContract[chainIdUint64] = simulatorContract
 		sdk.sorterContract[chainIdUint64] = sorterContract
+		sdk.userLastSequentialNonce[chainIdUint64] = make(map[common.Address]*big.Int)
 		sdk.userLastNonSequentialNonce[chainIdUint64] = make(map[common.Address]*big.Int)
+		sdk.dAppLastSequentialNonce[chainIdUint64] = make(map[common.Address]*big.Int)
+		sdk.noncesMu[chainIdUint64] = make(map[common.Address]*sync.Mutex)
 	}
 
 	return sdk, nil
