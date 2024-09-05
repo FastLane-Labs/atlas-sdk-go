@@ -295,6 +295,7 @@ func NewUserOperationPartialRaw(chainId uint64, userOp *UserOperation, hints []c
 }
 
 type UserOperationWithHintsRaw struct {
+	ChainId       *hexutil.Big      `json:"chainId" validate:"required"`
 	UserOperation *UserOperationRaw `json:"userOperation" validate:"required"`
 	Hints         []common.Address  `json:"hints"` // Optional
 }
