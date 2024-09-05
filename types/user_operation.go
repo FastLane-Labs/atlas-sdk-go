@@ -264,9 +264,14 @@ type UserOperationPartialRaw struct {
 	From  common.Address `json:"from,omitempty"`
 }
 
-func NewUserOperationPartialRaw(chainId *big.Int, userOpHash common.Hash, userOp *UserOperation, hints []common.Address) *UserOperationPartialRaw {
+func NewUserOperationPartialRaw(chainId uint64, userOp *UserOperation, hints []common.Address) (*UserOperationPartialRaw, error) {
+	userOpHash, err := userOp.Hash(utils.FlagTrustedOpHash(userOp.CallConfig), chainId)
+	if err != nil {
+		return nil, err
+	}
+
 	userOpPartial := &UserOperationPartialRaw{
-		ChainId:      (*hexutil.Big)(chainId),
+		ChainId:      (*hexutil.Big)(big.NewInt(int64(chainId))),
 		UserOpHash:   userOpHash,
 		To:           userOp.To,
 		Gas:          (*hexutil.Big)(userOp.Gas),
@@ -286,7 +291,7 @@ func NewUserOperationPartialRaw(chainId *big.Int, userOpHash common.Hash, userOp
 		userOpPartial.Value = (*hexutil.Big)(userOp.Value)
 	}
 
-	return userOpPartial
+	return userOpPartial, nil
 }
 
 type UserOperationWithHintsRaw struct {
