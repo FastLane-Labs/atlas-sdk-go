@@ -300,6 +300,14 @@ type UserOperationWithHintsRaw struct {
 	Hints         []common.Address  `json:"hints"`
 }
 
+func NewUserOperationWithHintsRaw(chainId uint64, userOp *UserOperation, hints []common.Address) *UserOperationWithHintsRaw {
+	return &UserOperationWithHintsRaw{
+		ChainId:       (*hexutil.Big)(big.NewInt(int64(chainId))),
+		UserOperation: userOp.EncodeToRaw(),
+		Hints:         hints,
+	}
+}
+
 func (uop *UserOperationWithHintsRaw) Decode() (uint64, *UserOperation, []common.Address) {
 	return uop.ChainId.ToInt().Uint64(), uop.UserOperation.Decode(), uop.Hints
 }
