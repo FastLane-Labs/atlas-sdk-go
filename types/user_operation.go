@@ -3,6 +3,7 @@ package types
 import (
 	"errors"
 	"math/big"
+	"math/rand/v2"
 
 	"github.com/FastLane-Labs/atlas-sdk-go/config"
 	"github.com/FastLane-Labs/atlas-sdk-go/utils"
@@ -242,4 +243,63 @@ func (u *UserOperation) toTypedDataMessage(trusted bool) apitypes.TypedDataMessa
 		"sessionKey":   u.SessionKey.Hex(),
 		"data":         u.Data,
 	}
+}
+
+type UserOperationPartialRaw struct {
+	ChainId *hexutil.Big `json:"chainId"`
+
+	UserOpHash   common.Hash    `json:"userOpHash"`
+	To           common.Address `json:"to"`
+	Gas          *hexutil.Big   `json:"gas"`
+	MaxFeePerGas *hexutil.Big   `json:"maxFeePerGas"`
+	Deadline     *hexutil.Big   `json:"deadline"`
+	Dapp         common.Address `json:"dapp"`
+	Control      common.Address `json:"control"`
+
+	//Exactly one of 1. Hints  2. (Value, Data, From) must be set
+	Hints []common.Address `json:"hints,omitempty"`
+
+	Value *hexutil.Big   `json:"value,omitempty"`
+	Data  hexutil.Bytes  `json:"data,omitempty"`
+	From  common.Address `json:"from,omitempty"`
+}
+
+func NewUserOperationPartialRaw(chainId uint64, userOp *UserOperation, hints []common.Address) (*UserOperationPartialRaw, error) {
+	userOpHash, err := userOp.Hash(utils.FlagTrustedOpHash(userOp.CallConfig), chainId)
+	if err != nil {
+		return nil, err
+	}
+
+	userOpPartial := &UserOperationPartialRaw{
+		ChainId:      (*hexutil.Big)(big.NewInt(int64(chainId))),
+		UserOpHash:   userOpHash,
+		To:           userOp.To,
+		Gas:          (*hexutil.Big)(userOp.Gas),
+		MaxFeePerGas: (*hexutil.Big)(userOp.MaxFeePerGas),
+		Deadline:     (*hexutil.Big)(userOp.Deadline),
+		Dapp:         userOp.Dapp,
+		Control:      userOp.Control,
+	}
+
+	if len(hints) > 0 {
+		//randomize hints
+		rand.Shuffle(len(hints), func(i, j int) { hints[i], hints[j] = hints[j], hints[i] })
+		userOpPartial.Hints = hints
+	} else {
+		userOpPartial.Data = hexutil.Bytes(userOp.Data)
+		userOpPartial.From = userOp.From
+		userOpPartial.Value = (*hexutil.Big)(userOp.Value)
+	}
+
+	return userOpPartial, nil
+}
+
+type UserOperationWithHintsRaw struct {
+	ChainId       *hexutil.Big      `json:"chainId"`
+	UserOperation *UserOperationRaw `json:"userOperation"`
+	Hints         []common.Address  `json:"hints"`
+}
+
+func (uop *UserOperationWithHintsRaw) Decode() (uint64, *UserOperation, []common.Address) {
+	return uop.ChainId.ToInt().Uint64(), uop.UserOperation.Decode(), uop.Hints
 }
