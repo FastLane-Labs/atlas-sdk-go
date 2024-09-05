@@ -295,11 +295,11 @@ func NewUserOperationPartialRaw(chainId uint64, userOp *UserOperation, hints []c
 }
 
 type UserOperationWithHintsRaw struct {
-	ChainId       *hexutil.Big      `json:"chainId" validate:"required"`
-	UserOperation *UserOperationRaw `json:"userOperation" validate:"required"`
-	Hints         []common.Address  `json:"hints"` // Optional
+	ChainId       *hexutil.Big      `json:"chainId"`
+	UserOperation *UserOperationRaw `json:"userOperation"`
+	Hints         []common.Address  `json:"hints"`
 }
 
-func (uop *UserOperationWithHintsRaw) Decode() (*UserOperation, []common.Address) {
-	return uop.UserOperation.Decode(), uop.Hints
+func (uop *UserOperationWithHintsRaw) Decode() (uint64, *UserOperation, []common.Address) {
+	return uop.ChainId.ToInt().Uint64(), uop.UserOperation.Decode(), uop.Hints
 }
