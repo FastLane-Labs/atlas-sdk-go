@@ -63,3 +63,17 @@ func (sdk *AtlasSdk) GetUserNextNonce(chainId uint64, user common.Address, callC
 
 	return nonce, nil
 }
+
+func (sdk *AtlasSdk) GetDAppNextNonce(chainId uint64, dApp common.Address, callConfig uint32) (*big.Int, error) {
+	if !utils.FlagDappNoncesSequential(callConfig) {
+		// Nonce not needed for non-sequential dapp calls
+		return new(big.Int).Set(common.Big0), nil
+	}
+
+	contract, ok := sdk.atlasVerificationContract[chainId]
+	if !ok {
+		return nil, errors.New("atlasVerification contract not found")
+	}
+
+	return contract.GetDAppNextNonce(nil, dApp)
+}
