@@ -2,6 +2,7 @@ package utils
 
 import (
 	"crypto/ecdsa"
+	"errors"
 
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common"
@@ -24,6 +25,9 @@ func SignEthereumMessage(data []byte, pk *ecdsa.PrivateKey) ([]byte, error) {
 }
 
 func RecoverSigner(messageHash []byte, signature []byte) (common.Address, error) {
+	if len(signature) != crypto.SignatureLength {
+		return common.Address{}, errors.New("invalid signature length")
+	}
 	sig := make([]byte, len(signature))
 	copy(sig, signature)
 	if sig[crypto.RecoveryIDOffset] == 27 || sig[crypto.RecoveryIDOffset] == 28 {
