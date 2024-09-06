@@ -3,7 +3,6 @@ package core
 import (
 	"errors"
 	"math/big"
-	"sync"
 
 	"github.com/FastLane-Labs/atlas-sdk-go/types"
 	"github.com/FastLane-Labs/atlas-sdk-go/utils"
@@ -21,89 +20,46 @@ func (sdk *AtlasSdk) SetUserNonce(chainId uint64, userOp *types.UserOperation) e
 	return nil
 }
 
-func (sdk *AtlasSdk) getUserNextNonce(chainId uint64, user common.Address, callConfig uint32) (*big.Int, error) {
+func (sdk *AtlasSdk) GetUserNextNonce(chainId uint64, user common.Address, callConfig uint32) (*big.Int, error) {
 	contract, ok := sdk.atlasVerificationContract[chainId]
 	if !ok {
 		return nil, errors.New("atlasVerification contract not found")
 	}
 
-	return contract.GetUserNextNonce(nil, user, utils.FlagUserNoncesSequential(callConfig))
-}
+	var (
+		nonce *big.Int
+		err   error
+	)
 
-func (sdk *AtlasSdk) getDAppNextNonce(chainId uint64, dApp common.Address, callConfig uint32) (*big.Int, error) {
-	if !utils.FlagDappNoncesSequential(callConfig) {
-		// Nonce not needed for non-sequential dapp calls
-		return new(big.Int).Set(common.Big0), nil
-	}
+	sdk.noncesMu.Lock()
+	defer sdk.noncesMu.Unlock()
 
-	contract, ok := sdk.atlasVerificationContract[chainId]
-	if !ok {
-		return nil, errors.New("atlasVerification contract not found")
-	}
-
-	return contract.GetDAppNextNonce(nil, dApp)
-}
-
-func (sdk *AtlasSdk) getNextNonce(
-	chainId uint64,
-	nonceMap map[uint64]map[common.Address]*big.Int,
-	account common.Address,
-	callConfig uint32,
-	retrievalFunc func(uint64, common.Address, uint32) (*big.Int, error),
-) (*big.Int, error) {
-	if record, ok := nonceMap[chainId]; !ok || record[account] == nil {
-		nonceMap[chainId] = make(map[common.Address]*big.Int)
-		lastNonce, err := retrievalFunc(chainId, account, callConfig)
+	if utils.FlagUserNoncesSequential(callConfig) {
+		nonce, err = contract.GetUserNextNonce(nil, user, true)
 		if err != nil {
 			return nil, err
 		}
-		nonceMap[chainId][account] = lastNonce
-	}
-
-	sdk.mu.Lock()
-	defer sdk.mu.Unlock()
-
-	return new(big.Int).Set(nonceMap[chainId][account].Add(nonceMap[chainId][account], common.Big1)), nil
-}
-
-func (sdk *AtlasSdk) getNonceMutex(chainId uint64, account common.Address) *sync.Mutex {
-	sdk.mu.Lock()
-	if _, ok := sdk.noncesMu[chainId]; !ok {
-		sdk.noncesMu[chainId] = make(map[common.Address]*sync.Mutex)
-	}
-	if _, ok := sdk.noncesMu[chainId][account]; !ok {
-		sdk.noncesMu[chainId][account] = &sync.Mutex{}
-	}
-	sdk.mu.Unlock()
-
-	return sdk.noncesMu[chainId][account]
-}
-
-func (sdk *AtlasSdk) GetUserNextNonce(chainId uint64, user common.Address, callConfig uint32) (*big.Int, error) {
-	nonceMu := sdk.getNonceMutex(chainId, user)
-	nonceMu.Lock()
-	defer nonceMu.Unlock()
-
-	var nonceMap map[uint64]map[common.Address]*big.Int
-
-	if utils.FlagUserNoncesSequential(callConfig) {
-		nonceMap = sdk.userLastSequentialNonce
 	} else {
-		nonceMap = sdk.userLastNonSequentialNonce
+		if _, ok := sdk.userLastNonSequentialNonce[chainId]; !ok {
+			sdk.userLastNonSequentialNonce[chainId] = make(map[common.Address]*big.Int)
+		}
+
+		lastNonce := sdk.userLastNonSequentialNonce[chainId][user]
+
+		if lastNonce == nil {
+			nonce, err = contract.GetUserNextNonce(nil, user, false)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			nonce, err = contract.GetUserNextNonSeqNonceAfter(nil, user, lastNonce)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		sdk.userLastNonSequentialNonce[chainId][user] = nonce
 	}
 
-	return sdk.getNextNonce(chainId, nonceMap, user, callConfig, sdk.getUserNextNonce)
-}
-
-func (sdk *AtlasSdk) GetDAppNextNonce(chainId uint64, dApp common.Address, callConfig uint32) (*big.Int, error) {
-	if !utils.FlagDappNoncesSequential(callConfig) {
-		// Nonce not needed for non-sequential dapp calls
-		return new(big.Int).Set(common.Big0), nil
-	}
-
-	nonceMu := sdk.getNonceMutex(chainId, dApp)
-	nonceMu.Lock()
-	defer nonceMu.Unlock()
-
-	return sdk.getNextNonce(chainId, sdk.dAppLastSequentialNonce, dApp, callConfig, sdk.getDAppNextNonce)
+	return nonce, nil
 }
