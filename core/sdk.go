@@ -25,6 +25,11 @@ type AtlasSdk struct {
 
 	userLastNonSequentialNonce map[uint64]map[common.Address]*big.Int
 	noncesMu                   sync.Mutex
+
+	atlasAddress             map[uint64]common.Address
+	atlasVerificationAddress map[uint64]common.Address
+	simulatorAddress         map[uint64]common.Address
+	sorterAddress            map[uint64]common.Address
 }
 
 func NewAtlasSdk(ethClient []*ethclient.Client, chainOverrides map[uint64]*config.ChainConfig) (*AtlasSdk, error) {
@@ -42,6 +47,10 @@ func NewAtlasSdk(ethClient []*ethclient.Client, chainOverrides map[uint64]*confi
 		simulatorContract:          make(map[uint64]*simulator.Simulator),
 		sorterContract:             make(map[uint64]*sorter.Sorter),
 		userLastNonSequentialNonce: make(map[uint64]map[common.Address]*big.Int),
+		atlasAddress:               make(map[uint64]common.Address),
+		atlasVerificationAddress:   make(map[uint64]common.Address),
+		simulatorAddress:           make(map[uint64]common.Address),
+		sorterAddress:              make(map[uint64]common.Address),
 	}
 
 	for _, client := range ethClient {
@@ -82,6 +91,10 @@ func NewAtlasSdk(ethClient []*ethclient.Client, chainOverrides map[uint64]*confi
 		sdk.simulatorContract[chainIdUint64] = simulatorContract
 		sdk.sorterContract[chainIdUint64] = sorterContract
 		sdk.userLastNonSequentialNonce[chainIdUint64] = make(map[common.Address]*big.Int)
+		sdk.atlasAddress[chainIdUint64] = chainConf.Contract.Atlas
+		sdk.atlasVerificationAddress[chainIdUint64] = chainConf.Contract.AtlasVerification
+		sdk.simulatorAddress[chainIdUint64] = chainConf.Contract.Simulator
+		sdk.sorterAddress[chainIdUint64] = chainConf.Contract.Sorter
 	}
 
 	return sdk, nil
