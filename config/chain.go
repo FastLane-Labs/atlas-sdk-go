@@ -103,6 +103,23 @@ var (
 				VerifyingContract: "0xae631aCDC436b9Dfd75C5629F825330d91459445",
 			},
 		},
+
+		// BSC testnet
+		97: {
+			Contract: &Contract{
+				Atlas:             common.HexToAddress("0x164d3f6Bd3e78220f59e33729aA0E473C57EB067"),
+				AtlasVerification: common.HexToAddress("0xa4445464B090D92CD2BD1c6F487F5f6284B26F7B"),
+				Sorter:            common.HexToAddress("0xc41EEF5317a0e477Fef550f792AF5b5Bb9e13b34"),
+				Simulator:         common.HexToAddress("0x91113eBDFD0c14BFAF48affD400800Bf851F6D11"),
+				Multicall3:        DEFAULT_MULTICALL3,
+			},
+			Eip712Domain: &apitypes.TypedDataDomain{
+				Name:              "AtlasVerification",
+				Version:           "1.0",
+				ChainId:           math.NewHexOrDecimal256(97),
+				VerifyingContract: "0xa4445464B090D92CD2BD1c6F487F5f6284B26F7B",
+			},
+		},
 	}
 )
 
