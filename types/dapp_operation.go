@@ -24,7 +24,19 @@ type DAppOperationRaw struct {
 	Signature     hexutil.Bytes  `json:"signature"`
 }
 
+func (d *DAppOperationRaw) Sanitize() {
+	if d.Nonce == nil {
+		d.Nonce = (*hexutil.Big)(big.NewInt(0))
+	}
+
+	if d.Deadline == nil {
+		d.Deadline = (*hexutil.Big)(big.NewInt(0))
+	}
+}
+
 func (d *DAppOperationRaw) Decode() *DAppOperation {
+	d.Sanitize()
+
 	return &DAppOperation{
 		From:          d.From,
 		To:            d.To,

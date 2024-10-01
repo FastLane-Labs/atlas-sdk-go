@@ -59,7 +59,31 @@ type SolverOperationRaw struct {
 	Signature    hexutil.Bytes  `json:"signature"`
 }
 
+func (s *SolverOperationRaw) Sanitize() {
+	if s.Value == nil {
+		s.Value = (*hexutil.Big)(big.NewInt(0))
+	}
+
+	if s.Gas == nil {
+		s.Gas = (*hexutil.Big)(big.NewInt(0))
+	}
+
+	if s.MaxFeePerGas == nil {
+		s.MaxFeePerGas = (*hexutil.Big)(big.NewInt(0))
+	}
+
+	if s.Deadline == nil {
+		s.Deadline = (*hexutil.Big)(big.NewInt(0))
+	}
+
+	if s.BidAmount == nil {
+		s.BidAmount = (*hexutil.Big)(big.NewInt(0))
+	}
+}
+
 func (s *SolverOperationRaw) Decode() *SolverOperation {
+	s.Sanitize()
+
 	return &SolverOperation{
 		From:         s.From,
 		To:           s.To,

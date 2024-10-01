@@ -52,7 +52,35 @@ type UserOperationRaw struct {
 	Signature    hexutil.Bytes  `json:"signature"`
 }
 
+func (u *UserOperationRaw) Sanitize() {
+	if u.Value == nil {
+		u.Value = (*hexutil.Big)(big.NewInt(0))
+	}
+
+	if u.Gas == nil {
+		u.Gas = (*hexutil.Big)(big.NewInt(0))
+	}
+
+	if u.MaxFeePerGas == nil {
+		u.MaxFeePerGas = (*hexutil.Big)(big.NewInt(0))
+	}
+
+	if u.Nonce == nil {
+		u.Nonce = (*hexutil.Big)(big.NewInt(0))
+	}
+
+	if u.Deadline == nil {
+		u.Deadline = (*hexutil.Big)(big.NewInt(0))
+	}
+
+	if u.CallConfig == nil {
+		u.CallConfig = (*hexutil.Big)(big.NewInt(0))
+	}
+}
+
 func (u *UserOperationRaw) Decode() *UserOperation {
+	u.Sanitize()
+
 	return &UserOperation{
 		From:         u.From,
 		To:           u.To,
