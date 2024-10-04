@@ -13,5 +13,8 @@ func (sdk *AtlasSdk) GetBalanceOfBondedAtlEth(chainId uint64, account common.Add
 		return nil, errors.New("atlas contract not found")
 	}
 
-	return contract.BalanceOfBonded(nil, account)
+	callOpts, cancel := NewCallOptsWithNetworkDeadline()
+	defer cancel()
+
+	return contract.BalanceOfBonded(callOpts, account)
 }

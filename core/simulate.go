@@ -1,7 +1,6 @@
 package core
 
 import (
-	"context"
 	"encoding/hex"
 	"fmt"
 	"math/big"
@@ -161,8 +160,11 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, userOp *types.UserOpe
 		return &UserOperationSimulationError{err: fmt.Errorf("no simulator Address for chainId %d", chainId)}
 	}
 
+	ctx, cancel := NewContextWithNetworkDeadline()
+	defer cancel()
+
 	bData, err := sdk.ethClient[chainId].CallContract(
-		context.Background(),
+		ctx,
 		ethereum.CallMsg{
 			To:        &simulatorAddr,
 			Gas:       userOp.Gas.Uint64() + 1500000, // Add gas for validateCalls and others
@@ -237,8 +239,11 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, userOp *types.UserO
 		return &SolverOperationSimulationError{err: fmt.Errorf("no simulator Address for chainId %d", chainId)}
 	}
 
+	ctx, cancel := NewContextWithNetworkDeadline()
+	defer cancel()
+
 	bData, err := sdk.ethClient[chainId].CallContract(
-		context.Background(),
+		ctx,
 		ethereum.CallMsg{
 			To:        &simulatorAddr,
 			Gas:       userOp.Gas.Uint64() + solverOp.Gas.Uint64() + 1500000, // Add gas for validateCalls and others

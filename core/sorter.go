@@ -39,7 +39,10 @@ func (sdk *AtlasSdk) SortSolverOperations(chainId uint64, userOp *types.UserOper
 		}
 	}
 
-	fmtSortedSolverOps, err := contract.SortBids(nil, sorter.UserOperation(*userOp), fmtSolverOps)
+	callOpts, cancel := NewCallOptsWithNetworkDeadline()
+	defer cancel()
+
+	fmtSortedSolverOps, err := contract.SortBids(callOpts, sorter.UserOperation(*userOp), fmtSolverOps)
 	if err != nil {
 		return nil, err
 	}

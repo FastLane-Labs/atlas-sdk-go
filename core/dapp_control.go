@@ -28,7 +28,10 @@ func (sdk *AtlasSdk) GetDAppCallConfig(chainId uint64, dAppControlAddr common.Ad
 		return 0, err
 	}
 
-	callConfig, err := dAppControlContract.CALLCONFIG(nil)
+	callOpts, cancel := NewCallOptsWithNetworkDeadline()
+	defer cancel()
+
+	callConfig, err := dAppControlContract.CALLCONFIG(callOpts)
 	if err != nil {
 		return 0, err
 	}
@@ -42,7 +45,10 @@ func (sdk *AtlasSdk) GetDAppConfig(chainId uint64, userOp *types.UserOperation, 
 		return nil, err
 	}
 
-	dAppConfig, err := dAppControlContract.GetDAppConfig(nil, dappcontrol.UserOperation(*userOp))
+	callOpts, cancel := NewCallOptsWithNetworkDeadline()
+	defer cancel()
+
+	dAppConfig, err := dAppControlContract.GetDAppConfig(callOpts, dappcontrol.UserOperation(*userOp))
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +62,10 @@ func (sdk *AtlasSdk) GetDAppSolverGasLimit(chainId uint64, dAppControlAddr commo
 		return nil, err
 	}
 
-	solverGasLimit, err := dAppControlContract.GetSolverGasLimit(nil)
+	callOpts, cancel := NewCallOptsWithNetworkDeadline()
+	defer cancel()
+
+	solverGasLimit, err := dAppControlContract.GetSolverGasLimit(callOpts)
 	if err != nil {
 		return nil, err
 	}

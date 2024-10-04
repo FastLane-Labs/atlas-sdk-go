@@ -1,7 +1,6 @@
 package core
 
 import (
-	"context"
 	"fmt"
 	"math/big"
 	"sync"
@@ -54,7 +53,10 @@ func NewAtlasSdk(ethClient []*ethclient.Client, chainOverrides map[uint64]*confi
 	}
 
 	for _, client := range ethClient {
-		chainId, err := client.ChainID(context.Background())
+		ctx, cancel := NewContextWithNetworkDeadline()
+		defer cancel()
+
+		chainId, err := client.ChainID(ctx)
 		if err != nil {
 			return nil, err
 		}

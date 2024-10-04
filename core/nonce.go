@@ -35,7 +35,10 @@ func (sdk *AtlasSdk) GetUserNextNonce(chainId uint64, user common.Address, callC
 	defer sdk.noncesMu.Unlock()
 
 	if utils.FlagUserNoncesSequential(callConfig) {
-		nonce, err = contract.GetUserNextNonce(nil, user, true)
+		callOpts, cancel := NewCallOptsWithNetworkDeadline()
+		defer cancel()
+
+		nonce, err = contract.GetUserNextNonce(callOpts, user, true)
 		if err != nil {
 			return nil, err
 		}
@@ -47,12 +50,18 @@ func (sdk *AtlasSdk) GetUserNextNonce(chainId uint64, user common.Address, callC
 		lastNonce := sdk.userLastNonSequentialNonce[chainId][user]
 
 		if lastNonce == nil {
-			nonce, err = contract.GetUserNextNonce(nil, user, false)
+			callOpts, cancel := NewCallOptsWithNetworkDeadline()
+			defer cancel()
+
+			nonce, err = contract.GetUserNextNonce(callOpts, user, false)
 			if err != nil {
 				return nil, err
 			}
 		} else {
-			nonce, err = contract.GetUserNextNonSeqNonceAfter(nil, user, lastNonce)
+			callOpts, cancel := NewCallOptsWithNetworkDeadline()
+			defer cancel()
+
+			nonce, err = contract.GetUserNextNonSeqNonceAfter(callOpts, user, lastNonce)
 			if err != nil {
 				return nil, err
 			}
@@ -75,5 +84,8 @@ func (sdk *AtlasSdk) GetDAppNextNonce(chainId uint64, dApp common.Address, callC
 		return nil, errors.New("atlasVerification contract not found")
 	}
 
-	return contract.GetDAppNextNonce(nil, dApp)
+	callOpts, cancel := NewCallOptsWithNetworkDeadline()
+	defer cancel()
+
+	return contract.GetDAppNextNonce(callOpts, dApp)
 }
