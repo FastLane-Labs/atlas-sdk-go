@@ -56,17 +56,17 @@ var (
 		// Polygon Mainnet
 		137: {
 			Contract: &Contract{
-				Atlas:             common.HexToAddress("0x57FA2aBf1dc109C5F7ea2FB6A72358D2c624971d"),
-				AtlasVerification: common.HexToAddress("0xA462C35C43355928F114144AD20AddD6Bb09b52f"),
-				Sorter:            common.HexToAddress("0x0cb4cCc7C853BA2CeA8bc8cB2ECF8142dF67BF79"),
-				Simulator:         common.HexToAddress("0x7f9227d40590D473D9FdD855C506f2D6400687Cb"),
+				Atlas:             common.HexToAddress("0x912AceADa1b9c9B378894D0610C5684167710FDD"),
+				AtlasVerification: common.HexToAddress("0x2fBF38a38D753E4ce398000CCC552Efa50702e1e"),
+				Sorter:            common.HexToAddress("0xFac7bf300E7eb17A2eD0Be67b60f5FeDd2E28E90"),
+				Simulator:         common.HexToAddress("0x1244E4B8D93D2A72692Bf3600f7f5a494e24895a"),
 				Multicall3:        DEFAULT_MULTICALL3,
 			},
 			Eip712Domain: &apitypes.TypedDataDomain{
 				Name:              "AtlasVerification",
 				Version:           "1.0",
 				ChainId:           math.NewHexOrDecimal256(137),
-				VerifyingContract: "0xA462C35C43355928F114144AD20AddD6Bb09b52f",
+				VerifyingContract: "0x2fBF38a38D753E4ce398000CCC552Efa50702e1e",
 			},
 		},
 
