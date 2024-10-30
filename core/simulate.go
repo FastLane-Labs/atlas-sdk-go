@@ -57,31 +57,31 @@ var (
 		29: "BothUserAndDAppNoncesCannotBeSequential",
 	}
 
-	SolverOutcome = map[uint8]string{
-		0:  "InvalidSignature",
-		1:  "InvalidUserHash",
-		2:  "DeadlinePassedAlt",
-		3:  "GasPriceBelowUsersAlt",
-		4:  "InvalidTo",
-		5:  "UserOutOfGas",
-		6:  "AlteredControl",
-		7:  "AltOpHashMismatch",
-		8:  "DeadlinePassed",
-		9:  "GasPriceOverCap",
-		10: "InvalidSolver",
-		11: "InvalidBidToken",
-		12: "PerBlockLimit",
-		13: "InsufficientEscrow",
-		14: "GasPriceBelowUsers",
-		15: "CallValueTooHigh",
-		16: "PreSolverFailed",
-		17: "SolverOpReverted",
-		18: "PostSolverFailed",
-		19: "BidNotPaid",
-		20: "InvertedBidExceedsCeiling",
-		21: "BalanceNotReconciled",
-		22: "CallbackNotCalled",
-		23: "EVMError",
+	SolverOutcome = map[uint64]string{
+		1 << 0:  "InvalidSignature",
+		1 << 1:  "InvalidUserHash",
+		1 << 2:  "DeadlinePassedAlt",
+		1 << 3:  "GasPriceBelowUsersAlt",
+		1 << 4:  "InvalidTo",
+		1 << 5:  "UserOutOfGas",
+		1 << 6:  "AlteredControl",
+		1 << 7:  "AltOpHashMismatch",
+		1 << 8:  "DeadlinePassed",
+		1 << 9:  "GasPriceOverCap",
+		1 << 10: "InvalidSolver",
+		1 << 11: "InvalidBidToken",
+		1 << 12: "PerBlockLimit",
+		1 << 13: "InsufficientEscrow",
+		1 << 14: "GasPriceBelowUsers",
+		1 << 15: "CallValueTooHigh",
+		1 << 16: "PreSolverFailed",
+		1 << 17: "SolverOpReverted",
+		1 << 18: "PostSolverFailed",
+		1 << 19: "BidNotPaid",
+		1 << 20: "InvertedBidExceedsCeiling",
+		1 << 21: "BalanceNotReconciled",
+		1 << 22: "CallbackNotCalled",
+		1 << 23: "EVMError",
 	}
 )
 
@@ -118,7 +118,7 @@ func (e *UserOperationSimulationError) Error() string {
 type SolverOperationSimulationError struct {
 	err           error
 	Result        uint8
-	SolverOutcome uint8
+	SolverOutcome uint64
 	Data          string
 }
 
@@ -127,7 +127,11 @@ func (e *SolverOperationSimulationError) ResultString() string {
 }
 
 func (e *SolverOperationSimulationError) SolverOutcomeString() string {
-	return SolverOutcome[e.SolverOutcome]
+	outcome, ok := SolverOutcome[e.SolverOutcome]
+	if !ok {
+		return fmt.Sprintf("UnknownSolverOutcome %d", e.SolverOutcome)
+	}
+	return outcome
 }
 
 func (e *SolverOperationSimulationError) Error() string {
@@ -267,7 +271,7 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, userOp *types.UserO
 		solverOutcomeResult := validOp[2].(*big.Int)
 		return &SolverOperationSimulationError{
 			Result:        result,
-			SolverOutcome: uint8(solverOutcomeResult.Uint64()),
+			SolverOutcome: solverOutcomeResult.Uint64(),
 			Data:          hex.EncodeToString(pData),
 		}
 	}
