@@ -28,7 +28,8 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	if err := config.OverrideChainConfig(0, unitTestChainConfig); err != nil {
+	version := config.AtlasVLatest
+	if err := config.OverrideChainConfig(0, &version, unitTestChainConfig); err != nil {
 		panic(err)
 	}
 

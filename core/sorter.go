@@ -1,69 +1,65 @@
 package core
 
 import (
-	"errors"
+	"fmt"
 
-	"github.com/FastLane-Labs/atlas-sdk-go/contract/sorter"
+	"github.com/FastLane-Labs/atlas-sdk-go/config"
+	"github.com/FastLane-Labs/atlas-sdk-go/contract"
 	"github.com/FastLane-Labs/atlas-sdk-go/types"
+	"github.com/ethereum/go-ethereum"
 )
 
-func (sdk *AtlasSdk) SortSolverOperations(chainId uint64, userOp *types.UserOperation, solverOps types.SolverOperations) (types.SolverOperations, error) {
-	contract, ok := sdk.sorterContract[chainId]
-	if !ok {
-		return nil, errors.New("sorter contract not found")
-	}
+const (
+	sortBidsFunction = "sortBids"
+)
 
-	if len(solverOps) == 0 {
-		return solverOps, nil
-	}
-
-	userOp.Sanitize()
-
-	fmtSolverOps := make([]sorter.SolverOperation, len(solverOps))
-	for i, solverOp := range solverOps {
-		solverOp.Sanitize()
-		fmtSolverOps[i] = sorter.SolverOperation{
-			From:         solverOp.From,
-			To:           solverOp.To,
-			Value:        solverOp.Value,
-			Gas:          solverOp.Gas,
-			MaxFeePerGas: solverOp.MaxFeePerGas,
-			Deadline:     solverOp.Deadline,
-			Solver:       solverOp.Solver,
-			Control:      solverOp.Control,
-			UserOpHash:   solverOp.UserOpHash,
-			BidToken:     solverOp.BidToken,
-			BidAmount:    solverOp.BidAmount,
-			Data:         solverOp.Data,
-			Signature:    solverOp.Signature,
-		}
-	}
-
-	callOpts, cancel := NewCallOptsWithNetworkDeadline()
-	defer cancel()
-
-	fmtSortedSolverOps, err := contract.SortBids(callOpts, sorter.UserOperation(*userOp), fmtSolverOps)
+func (sdk *AtlasSdk) SortSolverOperations(chainId uint64, version *string, userOp *types.UserOperation, solverOps types.SolverOperations) (types.SolverOperations, error) {
+	ethClient, err := sdk.getEthClient(chainId)
 	if err != nil {
 		return nil, err
 	}
 
-	sortedSolverOps := make(types.SolverOperations, len(fmtSortedSolverOps))
-	for i, fmtSortedSolverOp := range fmtSortedSolverOps {
-		sortedSolverOps[i] = &types.SolverOperation{
-			From:         fmtSortedSolverOp.From,
-			To:           fmtSortedSolverOp.To,
-			Value:        fmtSortedSolverOp.Value,
-			Gas:          fmtSortedSolverOp.Gas,
-			MaxFeePerGas: fmtSortedSolverOp.MaxFeePerGas,
-			Deadline:     fmtSortedSolverOp.Deadline,
-			Solver:       fmtSortedSolverOp.Solver,
-			Control:      fmtSortedSolverOp.Control,
-			UserOpHash:   fmtSortedSolverOp.UserOpHash,
-			BidToken:     fmtSortedSolverOp.BidToken,
-			BidAmount:    fmtSortedSolverOp.BidAmount,
-			Data:         fmtSortedSolverOp.Data,
-			Signature:    fmtSortedSolverOp.Signature,
-		}
+	sorterAddr, err := config.GetSorterAddress(chainId, version)
+	if err != nil {
+		return nil, err
+	}
+
+	sorterAbi, err := contract.GetSorterAbi(version)
+	if err != nil {
+		return nil, err
+	}
+
+	userOp.Sanitize()
+	solverOps.Sanitize()
+
+	pData, err := sorterAbi.Pack(sortBidsFunction, userOp, solverOps)
+	if err != nil {
+		return nil, fmt.Errorf("failed to pack %s: %w", sortBidsFunction, err)
+	}
+
+	ctx, cancel := NewContextWithNetworkDeadline()
+	defer cancel()
+
+	bData, err := ethClient.CallContract(
+		ctx,
+		ethereum.CallMsg{
+			To:   &sorterAddr,
+			Data: pData,
+		},
+		nil,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to call %s: %w", sortBidsFunction, err)
+	}
+
+	_sortedSolverOps, err := sorterAbi.Unpack(sortBidsFunction, bData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unpack %s: %w", sortBidsFunction, err)
+	}
+
+	sortedSolverOps, ok := _sortedSolverOps[0].(types.SolverOperations)
+	if !ok {
+		return nil, fmt.Errorf("failed to cast %s: %w", sortBidsFunction, err)
 	}
 
 	return sortedSolverOps, nil

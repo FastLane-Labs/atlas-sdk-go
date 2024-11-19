@@ -22,11 +22,20 @@ type ChainConfig struct {
 	Eip712Domain *apitypes.TypedDataDomain `json:"eip712Domain"`
 }
 
+const (
+	AtlasV_1_0_0 = "1.0.0"
+	AtlasV_1_0_1 = "1.0.1"
+	AtlasV_1_1_0 = "1.1.0"
+	AtlasVLatest = AtlasV_1_1_0
+)
+
 var (
 	DEFAULT_MULTICALL3 = common.HexToAddress("0xcA11bde05977b3631167028862bE2a173976CA11")
-	chainConfig        = map[uint64]*ChainConfig{}
+	chainConfig        = map[uint64]map[string]*ChainConfig{} // Indexed by [chainId][atlasVersion]
 	initOnce           sync.Once
 	mu                 sync.RWMutex
+
+	allVersions = []string{AtlasV_1_0_0, AtlasV_1_0_1, AtlasV_1_1_0}
 )
 
 func initChainConfig() error {
@@ -60,22 +69,39 @@ func initChainConfig() error {
 	return initErr
 }
 
-func GetChainConfig(chainId uint64) (*ChainConfig, error) {
+func GetAllVersions() []string {
+	v := make([]string, len(allVersions))
+	copy(v, allVersions)
+	return v
+}
+
+func GetVersion(version *string) string {
+	if version == nil {
+		return AtlasVLatest
+	}
+
+	return *version
+}
+
+func GetChainConfig(chainId uint64, version *string) (*ChainConfig, error) {
 	if err := initChainConfig(); err != nil {
 		return nil, err
 	}
 
+	v := GetVersion(version)
+
 	mu.RLock()
 	defer mu.RUnlock()
 
-	if chainConfig[chainId] == nil {
-		return nil, fmt.Errorf("chain config not found for chain id %d", chainId)
+	_chainConfig, ok := chainConfig[chainId][v]
+	if !ok {
+		return nil, fmt.Errorf("chain config not found for chain id %d and version %s", chainId, v)
 	}
 
-	return chainConfig[chainId], nil
+	return _chainConfig, nil
 }
 
-func OverrideChainConfig(chainId uint64, config *ChainConfig) error {
+func OverrideChainConfig(chainId uint64, version *string, config *ChainConfig) error {
 	if config.Contract == nil {
 		return errors.New("contract config is required")
 	}
@@ -120,15 +146,21 @@ func OverrideChainConfig(chainId uint64, config *ChainConfig) error {
 		return errors.New("eip712 domain verifying contract is invalid")
 	}
 
+	v := GetVersion(version)
+
 	mu.Lock()
 	defer mu.Unlock()
 
-	chainConfig[chainId] = config
+	if chainConfig[chainId] == nil {
+		chainConfig[chainId] = make(map[string]*ChainConfig)
+	}
+
+	chainConfig[chainId][v] = config
 	return nil
 }
 
-func GetAtlasAddress(chainId uint64) (common.Address, error) {
-	chainConf, err := GetChainConfig(chainId)
+func GetAtlasAddress(chainId uint64, version *string) (common.Address, error) {
+	chainConf, err := GetChainConfig(chainId, version)
 	if err != nil {
 		return common.Address{}, err
 	}
@@ -136,8 +168,8 @@ func GetAtlasAddress(chainId uint64) (common.Address, error) {
 	return chainConf.Contract.Atlas, nil
 }
 
-func GetAtlasVerificationAddress(chainId uint64) (common.Address, error) {
-	chainConf, err := GetChainConfig(chainId)
+func GetAtlasVerificationAddress(chainId uint64, version *string) (common.Address, error) {
+	chainConf, err := GetChainConfig(chainId, version)
 	if err != nil {
 		return common.Address{}, err
 	}
@@ -145,8 +177,8 @@ func GetAtlasVerificationAddress(chainId uint64) (common.Address, error) {
 	return chainConf.Contract.AtlasVerification, nil
 }
 
-func GetSorterAddress(chainId uint64) (common.Address, error) {
-	chainConf, err := GetChainConfig(chainId)
+func GetSorterAddress(chainId uint64, version *string) (common.Address, error) {
+	chainConf, err := GetChainConfig(chainId, version)
 	if err != nil {
 		return common.Address{}, err
 	}
@@ -154,8 +186,8 @@ func GetSorterAddress(chainId uint64) (common.Address, error) {
 	return chainConf.Contract.Sorter, nil
 }
 
-func GetSimulatorAddress(chainId uint64) (common.Address, error) {
-	chainConf, err := GetChainConfig(chainId)
+func GetSimulatorAddress(chainId uint64, version *string) (common.Address, error) {
+	chainConf, err := GetChainConfig(chainId, version)
 	if err != nil {
 		return common.Address{}, err
 	}
@@ -163,8 +195,8 @@ func GetSimulatorAddress(chainId uint64) (common.Address, error) {
 	return chainConf.Contract.Simulator, nil
 }
 
-func GetMulticall3Address(chainId uint64) (common.Address, error) {
-	chainConf, err := GetChainConfig(chainId)
+func GetMulticall3Address(chainId uint64, version *string) (common.Address, error) {
+	chainConf, err := GetChainConfig(chainId, version)
 	if err != nil {
 		return common.Address{}, err
 	}
@@ -172,8 +204,8 @@ func GetMulticall3Address(chainId uint64) (common.Address, error) {
 	return chainConf.Contract.Multicall3, nil
 }
 
-func GetEip712Domain(chainId uint64) (*apitypes.TypedDataDomain, error) {
-	chainConf, err := GetChainConfig(chainId)
+func GetEip712Domain(chainId uint64, version *string) (*apitypes.TypedDataDomain, error) {
+	chainConf, err := GetChainConfig(chainId, version)
 	if err != nil {
 		return nil, err
 	}

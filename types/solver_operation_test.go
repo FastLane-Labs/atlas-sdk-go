@@ -31,7 +31,7 @@ func TestSolverOperationHash(t *testing.T) {
 	solverOp := generateSolverOperation()
 	want := common.HexToHash("0x36ff5301f530e9175cca32acbac7bc6798d5be0c04372ba3f05149b2455c5405")
 
-	result, err := solverOp.Hash(0)
+	result, err := solverOp.Hash(0, nil)
 	if err != nil {
 		t.Errorf("SolverOperation.Hash() error = %v", err)
 	}
@@ -64,7 +64,7 @@ func TestSolverOperationCheckSignature(t *testing.T) {
 	solverOp.From = common.HexToAddress("0xB764B6545d283C0E547952763F8a843394295da1")
 	solverOp.Signature = common.FromHex("0x8e8d89974eb665dea669d922ad26d055b835d426fb60885a40d439ea213deb8204ce569ad60caa3fe8892656fa189a28ab2c71b02135b9b9d746d6ac12b87b6c1c")
 
-	if err := solverOp.ValidateSignature(0); err != nil {
+	if err := solverOp.ValidateSignature(0, nil); err != nil {
 		t.Errorf("DAppOperation.checkSignature() error = %v", err)
 	}
 }

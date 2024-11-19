@@ -1,59 +1,55 @@
 package core
 
 import (
-	"errors"
-
-	"github.com/FastLane-Labs/atlas-sdk-go/contract/atlas"
+	"github.com/FastLane-Labs/atlas-sdk-go/config"
+	"github.com/FastLane-Labs/atlas-sdk-go/contract"
 	"github.com/FastLane-Labs/atlas-sdk-go/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	gethTypes "github.com/ethereum/go-ethereum/core/types"
 )
 
-func (sdk *AtlasSdk) Metacall(chainId uint64, transactOpts *bind.TransactOpts, userOp *types.UserOperation, solverOps types.SolverOperations, dAppOp *types.DAppOperation) (*gethTypes.Transaction, error) {
-	contract, ok := sdk.atlasContract[chainId]
-	if !ok {
-		return nil, errors.New("atlas contract not found")
+const (
+	metacallFunction = "metacall"
+)
+
+func (sdk *AtlasSdk) Metacall(chainId uint64, version *string, transactOpts *bind.TransactOpts, userOp *types.UserOperation, solverOps types.SolverOperations, dAppOp *types.DAppOperation, gasRefundBeneficiary *common.Address) (*gethTypes.Transaction, error) {
+	ethClient, err := sdk.getEthClient(chainId)
+	if err != nil {
+		return nil, err
+	}
+
+	atlasAddr, err := config.GetAtlasAddress(chainId, version)
+	if err != nil {
+		return nil, err
+	}
+
+	atlasAbi, err := contract.GetAtlasAbi(version)
+	if err != nil {
+		return nil, err
 	}
 
 	userOp.Sanitize()
 	solverOps.Sanitize()
 	dAppOp.Sanitize()
 
-	_dAppOp := atlas.DAppOperation{
-		From:          dAppOp.From,
-		To:            dAppOp.To,
-		Nonce:         dAppOp.Nonce,
-		Deadline:      dAppOp.Deadline,
-		Control:       dAppOp.Control,
-		Bundler:       dAppOp.Bundler,
-		UserOpHash:    dAppOp.UserOpHash,
-		CallChainHash: dAppOp.CallChainHash,
-		Signature:     dAppOp.Signature,
-	}
+	var (
+		contract = bind.NewBoundContract(atlasAddr, *atlasAbi, ethClient, ethClient, ethClient)
+		params   []interface{}
+	)
 
-	_solverOps := make([]atlas.SolverOperation, len(solverOps))
-	for i, solverOp := range solverOps {
-		_solverOps[i] = atlas.SolverOperation{
-			From:         solverOp.From,
-			To:           solverOp.To,
-			Value:        solverOp.Value,
-			Gas:          solverOp.Gas,
-			MaxFeePerGas: solverOp.MaxFeePerGas,
-			Deadline:     solverOp.Deadline,
-			Solver:       solverOp.Solver,
-			Control:      solverOp.Control,
-			UserOpHash:   solverOp.UserOpHash,
-			BidToken:     solverOp.BidToken,
-			BidAmount:    solverOp.BidAmount,
-			Data:         solverOp.Data,
-			Signature:    solverOp.Signature,
+	switch config.GetVersion(version) {
+	case config.AtlasV_1_0_0, config.AtlasV_1_0_1:
+		params = append(params, userOp, solverOps, dAppOp)
+
+	case config.AtlasV_1_1_0:
+		var _gasRefundBeneficiary common.Address
+		if gasRefundBeneficiary != nil {
+			_gasRefundBeneficiary = *gasRefundBeneficiary
 		}
+
+		params = append(params, userOp, solverOps, dAppOp, _gasRefundBeneficiary)
 	}
 
-	tx, err := contract.Metacall(transactOpts, atlas.UserOperation(*userOp), _solverOps, _dAppOp)
-	if err != nil {
-		return nil, err
-	}
-
-	return tx, nil
+	return contract.Transact(transactOpts, metacallFunction, params...)
 }

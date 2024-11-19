@@ -5,11 +5,17 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/FastLane-Labs/atlas-sdk-go/config"
 	"github.com/FastLane-Labs/atlas-sdk-go/contract"
 	"github.com/FastLane-Labs/atlas-sdk-go/types"
 	"github.com/FastLane-Labs/atlas-sdk-go/utils"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
+)
+
+const (
+	simUserOperationFunction = "simUserOperation"
+	simSolverCallFunction    = "simSolverCall"
 )
 
 var (
@@ -149,25 +155,31 @@ func (e *SolverOperationSimulationError) Error() string {
 	)
 }
 
-func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, userOp *types.UserOperation) *UserOperationSimulationError {
-	pData, err := contract.SimulatorAbi.Pack("simUserOperation", *userOp)
+func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, userOp *types.UserOperation) *UserOperationSimulationError {
+	ethClient, err := sdk.getEthClient(chainId)
 	if err != nil {
-		return &UserOperationSimulationError{err: fmt.Errorf("failed to pack simUserOperation: %w", err)}
+		return &UserOperationSimulationError{err: err}
 	}
 
-	if _, ok := sdk.ethClient[chainId]; !ok {
-		return &UserOperationSimulationError{err: fmt.Errorf("no ethClient for chainId %d", chainId)}
+	simulatorAddr, err := config.GetSimulatorAddress(chainId, version)
+	if err != nil {
+		return &UserOperationSimulationError{err: err}
 	}
 
-	simulatorAddr, ok := sdk.simulatorAddress[chainId]
-	if !ok {
-		return &UserOperationSimulationError{err: fmt.Errorf("no simulator Address for chainId %d", chainId)}
+	simulatorAbi, err := contract.GetSimulatorAbi(version)
+	if err != nil {
+		return &UserOperationSimulationError{err: err}
+	}
+
+	pData, err := simulatorAbi.Pack(simUserOperationFunction, userOp)
+	if err != nil {
+		return &UserOperationSimulationError{err: fmt.Errorf("failed to pack %s: %w", simUserOperationFunction, err)}
 	}
 
 	ctx, cancel := NewContextWithNetworkDeadline()
 	defer cancel()
 
-	bData, err := sdk.ethClient[chainId].CallContract(
+	bData, err := ethClient.CallContract(
 		ctx,
 		ethereum.CallMsg{
 			To:        &simulatorAddr,
@@ -178,12 +190,12 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, userOp *types.UserOpe
 		},
 		nil)
 	if err != nil {
-		return &UserOperationSimulationError{err: fmt.Errorf("failed to call simUserOperation: %w", err)}
+		return &UserOperationSimulationError{err: fmt.Errorf("failed to call %s: %w", simUserOperationFunction, err)}
 	}
 
-	validOp, err := contract.SimulatorAbi.Unpack("simUserOperation", bData)
+	validOp, err := simulatorAbi.Unpack(simUserOperationFunction, bData)
 	if err != nil {
-		return &UserOperationSimulationError{err: fmt.Errorf("failed to unpack simUserOperation: %w", err)}
+		return &UserOperationSimulationError{err: fmt.Errorf("failed to unpack %s: %w", simUserOperationFunction, err)}
 	}
 
 	if !validOp[0].(bool) {
@@ -199,11 +211,27 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, userOp *types.UserOpe
 	return nil
 }
 
-func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, userOp *types.UserOperation, solverOp *types.SolverOperation) *SolverOperationSimulationError {
-	userOpHash, err := userOp.Hash(utils.FlagTrustedOpHash(userOp.CallConfig), chainId)
+func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, userOp *types.UserOperation, solverOp *types.SolverOperation) *SolverOperationSimulationError {
+	ethClient, err := sdk.getEthClient(chainId)
+	if err != nil {
+		return &SolverOperationSimulationError{err: err}
+	}
+
+	simulatorAddr, err := config.GetSimulatorAddress(chainId, version)
+	if err != nil {
+		return &SolverOperationSimulationError{err: err}
+	}
+
+	simulatorAbi, err := contract.GetSimulatorAbi(version)
+	if err != nil {
+		return &SolverOperationSimulationError{err: err}
+	}
+
+	userOpHash, err := userOp.Hash(utils.FlagTrustedOpHash(userOp.CallConfig), chainId, version)
 	if err != nil {
 		return &SolverOperationSimulationError{err: fmt.Errorf("failed to hash userOp: %w", err)}
 	}
+
 	dAppOp := &types.DAppOperation{
 		From:          common.Address{},
 		To:            userOp.To,
@@ -224,9 +252,9 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, userOp *types.UserO
 		dAppOp.CallChainHash = callChainHash
 	}
 
-	pData, err := contract.SimulatorAbi.Pack("simSolverCall", *userOp, *solverOp, *dAppOp)
+	pData, err := simulatorAbi.Pack(simSolverCallFunction, userOp, solverOp, dAppOp)
 	if err != nil {
-		return &SolverOperationSimulationError{err: fmt.Errorf("failed to pack simSolverCall: %w", err)}
+		return &SolverOperationSimulationError{err: fmt.Errorf("failed to pack %s: %w", simSolverCallFunction, err)}
 	}
 
 	gasPrice := new(big.Int).Set(userOp.MaxFeePerGas)
@@ -234,19 +262,10 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, userOp *types.UserO
 		gasPrice.Set(solverOp.MaxFeePerGas)
 	}
 
-	if _, ok := sdk.ethClient[chainId]; !ok {
-		return &SolverOperationSimulationError{err: fmt.Errorf("no ethClient for chainId %d", chainId)}
-	}
-
-	simulatorAddr, ok := sdk.simulatorAddress[chainId]
-	if !ok {
-		return &SolverOperationSimulationError{err: fmt.Errorf("no simulator Address for chainId %d", chainId)}
-	}
-
 	ctx, cancel := NewContextWithNetworkDeadline()
 	defer cancel()
 
-	bData, err := sdk.ethClient[chainId].CallContract(
+	bData, err := ethClient.CallContract(
 		ctx,
 		ethereum.CallMsg{
 			To:        &simulatorAddr,
@@ -258,12 +277,12 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, userOp *types.UserO
 		nil,
 	)
 	if err != nil {
-		return &SolverOperationSimulationError{err: fmt.Errorf("failed to call simSolverCall: %w", err)}
+		return &SolverOperationSimulationError{err: fmt.Errorf("failed to call %s: %w", simSolverCallFunction, err)}
 	}
 
-	validOp, err := contract.SimulatorAbi.Unpack("simSolverCall", bData)
+	validOp, err := simulatorAbi.Unpack(simSolverCallFunction, bData)
 	if err != nil {
-		return &SolverOperationSimulationError{err: fmt.Errorf("failed to unpack simSolverCall: %w pData %s", err, hex.EncodeToString(pData))}
+		return &SolverOperationSimulationError{err: fmt.Errorf("failed to unpack %s: %w pData %s", simSolverCallFunction, err, hex.EncodeToString(pData))}
 	}
 
 	if !validOp[0].(bool) {

@@ -160,8 +160,8 @@ func (s *SolverOperation) EncodeToRaw() *SolverOperationRaw {
 	}
 }
 
-func (s *SolverOperation) Hash(chainId uint64) (common.Hash, error) {
-	eip712Domain, err := config.GetEip712Domain(chainId)
+func (s *SolverOperation) Hash(chainId uint64, version *string) (common.Hash, error) {
+	eip712Domain, err := config.GetEip712Domain(chainId, version)
 	if err != nil {
 		return common.Hash{}, err
 	}
@@ -185,12 +185,12 @@ func (s *SolverOperation) AbiEncode() ([]byte, error) {
 	return solverOpArgs.Pack(&s)
 }
 
-func (s *SolverOperation) ValidateSignature(chainId uint64) error {
+func (s *SolverOperation) ValidateSignature(chainId uint64, version *string) error {
 	if len(s.Signature) != 65 {
 		return errors.New("invalid signature length")
 	}
 
-	solverOpHash, err := s.Hash(chainId)
+	solverOpHash, err := s.Hash(chainId, version)
 	if err != nil {
 		return err
 	}

@@ -31,7 +31,7 @@ func TestUserOperationHashDefault(t *testing.T) {
 	userOp := generateUserOperation()
 	want := common.HexToHash("0x021a7f3f62347f1f3d1163aa8eb9fc965e87556aede03c7182ec05bc60311b64")
 
-	result, err := userOp.Hash(false, 0)
+	result, err := userOp.Hash(false, 0, nil)
 	if err != nil {
 		t.Errorf("UserOperation.Hash() error = %v", err)
 	}
@@ -47,7 +47,7 @@ func TestUserOperationHashTrusted(t *testing.T) {
 	userOp := generateUserOperation()
 	want := common.HexToHash("0x96aa1212cae2645ba1b8bf8014abccdfe9a60c16f86e21f82753d4cecc0b6089")
 
-	result, err := userOp.Hash(true, 0)
+	result, err := userOp.Hash(true, 0, nil)
 	if err != nil {
 		t.Errorf("UserOperation.Hash() error = %v", err)
 	}
@@ -80,7 +80,7 @@ func TestUserOperationValidateSignature(t *testing.T) {
 	userOp.From = common.HexToAddress("0xB764B6545d283C0E547952763F8a843394295da1")
 	userOp.Signature = common.FromHex("0x63e05429d1f5253ceebddf5f709c33d211592798cc4f89af302ade417e1de0173dd2c50d1bccc996e68839491a3539c3400c8b0721c29c236a3027f1dc274e151b")
 
-	if err := userOp.ValidateSignature(0); err != nil {
+	if err := userOp.ValidateSignature(0, nil); err != nil {
 		t.Errorf("DAppOperation.checkSignature() error = %v", err)
 	}
 }
