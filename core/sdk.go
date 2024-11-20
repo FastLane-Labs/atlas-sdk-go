@@ -47,7 +47,16 @@ func NewAtlasSdk(ethClient []*ethclient.Client, chainOverrides map[uint64]map[st
 		sdk.ethClient[chainIdUint64] = client
 
 		for _, version := range config.GetAllVersions() {
+			if _, ok := sdk.userLastNonSequentialNonce[chainIdUint64]; !ok {
+				sdk.userLastNonSequentialNonce[chainIdUint64] = make(map[string]map[common.Address]*big.Int)
+			}
+
 			sdk.userLastNonSequentialNonce[chainIdUint64][version] = make(map[common.Address]*big.Int)
+
+			if _, ok := sdk.noncesMu[chainIdUint64]; !ok {
+				sdk.noncesMu[chainIdUint64] = make(map[string]*sync.Mutex)
+			}
+
 			sdk.noncesMu[chainIdUint64][version] = &sync.Mutex{}
 		}
 	}
