@@ -34,13 +34,18 @@ func (sdk *AtlasSdk) Metacall(chainId uint64, version *string, transactOpts *bin
 	dAppOp.Sanitize()
 
 	var (
-		contract = bind.NewBoundContract(atlasAddr, *atlasAbi, ethClient, ethClient, ethClient)
-		params   []interface{}
+		contract   = bind.NewBoundContract(atlasAddr, *atlasAbi, ethClient, ethClient, ethClient)
+		_solverOps = make([]types.SolverOperation, len(solverOps))
+		params     []interface{}
 	)
+
+	for i, op := range solverOps {
+		_solverOps[i] = *op
+	}
 
 	switch config.GetVersion(version) {
 	case config.AtlasV_1_0_0, config.AtlasV_1_0_1:
-		params = append(params, userOp, solverOps, dAppOp)
+		params = append(params, userOp, _solverOps, dAppOp)
 
 	case config.AtlasV_1_1_0:
 		var _gasRefundBeneficiary common.Address
@@ -48,7 +53,7 @@ func (sdk *AtlasSdk) Metacall(chainId uint64, version *string, transactOpts *bin
 			_gasRefundBeneficiary = *gasRefundBeneficiary
 		}
 
-		params = append(params, userOp, solverOps, dAppOp, _gasRefundBeneficiary)
+		params = append(params, userOp, _solverOps, dAppOp, _gasRefundBeneficiary)
 	}
 
 	return contract.Transact(transactOpts, metacallFunction, params...)
