@@ -1,7 +1,7 @@
 // Code generated - DO NOT EDIT.
 // This file is a generated binding and any manual changes will be lost.
 
-package sorter_1_0_0
+package sorter_1_1
 
 import (
 	"errors"

@@ -23,10 +23,10 @@ type ChainConfig struct {
 }
 
 const (
-	AtlasV_1_0_0 = "1.0.0"
-	AtlasV_1_0_1 = "1.0.1"
-	AtlasV_1_1_0 = "1.1.0"
-	AtlasVLatest = AtlasV_1_1_0
+	AtlasV_1_0   = "1.0"
+	AtlasV_1_1   = "1.1"
+	AtlasV_1_2   = "1.2"
+	AtlasVLatest = AtlasV_1_2
 )
 
 var (
@@ -35,7 +35,7 @@ var (
 	initOnce           sync.Once
 	mu                 sync.RWMutex
 
-	allVersions = []string{AtlasV_1_0_0, AtlasV_1_0_1, AtlasV_1_1_0}
+	allVersions = []string{AtlasV_1_0, AtlasV_1_1, AtlasV_1_2}
 )
 
 func initChainConfig() error {
