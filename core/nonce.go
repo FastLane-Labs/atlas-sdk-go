@@ -1,16 +1,25 @@
 package core
 
 import (
-	"errors"
+	"fmt"
 	"math/big"
 
+	"github.com/FastLane-Labs/atlas-sdk-go/config"
+	"github.com/FastLane-Labs/atlas-sdk-go/contract"
 	"github.com/FastLane-Labs/atlas-sdk-go/types"
 	"github.com/FastLane-Labs/atlas-sdk-go/utils"
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func (sdk *AtlasSdk) SetUserNonce(chainId uint64, userOp *types.UserOperation) error {
-	nonce, err := sdk.GetUserNextNonce(chainId, userOp.From, userOp.CallConfig)
+const (
+	getUserNextNonceFunction            = "getUserNextNonce"
+	getUserNextNonSeqNonceAfterFunction = "getUserNextNonSeqNonceAfter"
+	getDAppNextNonceFunction            = "getDAppNextNonce"
+)
+
+func (sdk *AtlasSdk) SetUserNonce(chainId uint64, version *string, userOp *types.UserOperation) error {
+	nonce, err := sdk.GetUserNextNonce(chainId, version, userOp.From, userOp.CallConfig)
 	if err != nil {
 		return err
 	}
@@ -20,72 +29,146 @@ func (sdk *AtlasSdk) SetUserNonce(chainId uint64, userOp *types.UserOperation) e
 	return nil
 }
 
-func (sdk *AtlasSdk) GetUserNextNonce(chainId uint64, user common.Address, callConfig uint32) (*big.Int, error) {
-	contract, ok := sdk.atlasVerificationContract[chainId]
-	if !ok {
-		return nil, errors.New("atlasVerification contract not found")
+func (sdk *AtlasSdk) GetUserNextNonce(chainId uint64, version *string, user common.Address, callConfig uint32) (*big.Int, error) {
+	ethClient, err := sdk.getEthClient(chainId)
+	if err != nil {
+		return nil, err
 	}
 
-	var (
-		nonce *big.Int
-		err   error
-	)
+	atlasVerificationAddr, err := config.GetAtlasVerificationAddress(chainId, version)
+	if err != nil {
+		return nil, err
+	}
 
-	sdk.noncesMu.Lock()
-	defer sdk.noncesMu.Unlock()
+	atlasVerificationAbi, err := contract.GetAtlasVerificationAbi(version)
+	if err != nil {
+		return nil, err
+	}
+
+	v := config.GetVersion(version)
+
+	mu, ok := sdk.noncesMu[chainId][v]
+	if !ok {
+		// This can happen if a chain config has been overridden
+		mu = &sdk.mu
+	}
+
+	var pData []byte
+
+	mu.Lock()
+	defer mu.Unlock()
 
 	if utils.FlagUserNoncesSequential(callConfig) {
-		callOpts, cancel := NewCallOptsWithNetworkDeadline()
-		defer cancel()
-
-		nonce, err = contract.GetUserNextNonce(callOpts, user, true)
+		pData, err = atlasVerificationAbi.Pack(getUserNextNonceFunction, user, true)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to pack %s: %w", getUserNextNonceFunction, err)
 		}
 	} else {
 		if _, ok := sdk.userLastNonSequentialNonce[chainId]; !ok {
-			sdk.userLastNonSequentialNonce[chainId] = make(map[common.Address]*big.Int)
+			sdk.userLastNonSequentialNonce[chainId] = make(map[string]map[common.Address]*big.Int)
 		}
 
-		lastNonce := sdk.userLastNonSequentialNonce[chainId][user]
+		if _, ok := sdk.userLastNonSequentialNonce[chainId][v]; !ok {
+			sdk.userLastNonSequentialNonce[chainId][v] = make(map[common.Address]*big.Int)
+		}
+
+		lastNonce := sdk.userLastNonSequentialNonce[chainId][v][user]
 
 		if lastNonce == nil {
-			callOpts, cancel := NewCallOptsWithNetworkDeadline()
-			defer cancel()
-
-			nonce, err = contract.GetUserNextNonce(callOpts, user, false)
+			pData, err = atlasVerificationAbi.Pack(getUserNextNonceFunction, user, false)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("failed to pack %s: %w", getUserNextNonceFunction, err)
 			}
 		} else {
-			callOpts, cancel := NewCallOptsWithNetworkDeadline()
-			defer cancel()
-
-			nonce, err = contract.GetUserNextNonSeqNonceAfter(callOpts, user, lastNonce)
+			pData, err = atlasVerificationAbi.Pack(getUserNextNonSeqNonceAfterFunction, user, lastNonce)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("failed to pack %s: %w", getUserNextNonSeqNonceAfterFunction, err)
 			}
 		}
+	}
 
-		sdk.userLastNonSequentialNonce[chainId][user] = nonce
+	ctx, cancel := NewContextWithNetworkDeadline()
+	defer cancel()
+
+	bData, err := ethClient.CallContract(
+		ctx,
+		ethereum.CallMsg{
+			To:   &atlasVerificationAddr,
+			Data: pData,
+		},
+		nil,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to call %s: %w", getUserNextNonceFunction, err)
+	}
+
+	_nonce, err := atlasVerificationAbi.Unpack(getUserNextNonceFunction, bData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unpack %s: %w", getUserNextNonceFunction, err)
+	}
+
+	nonce, ok := _nonce[0].(*big.Int)
+	if !ok {
+		return nil, fmt.Errorf("failed to cast %s: %w", getUserNextNonceFunction, err)
+	}
+
+	if !utils.FlagUserNoncesSequential(callConfig) {
+		sdk.userLastNonSequentialNonce[chainId][v][user] = nonce
 	}
 
 	return nonce, nil
 }
 
-func (sdk *AtlasSdk) GetDAppNextNonce(chainId uint64, dApp common.Address, callConfig uint32) (*big.Int, error) {
+func (sdk *AtlasSdk) GetDAppNextNonce(chainId uint64, version *string, dApp common.Address, callConfig uint32) (*big.Int, error) {
 	if !utils.FlagDappNoncesSequential(callConfig) {
 		// Nonce not needed for non-sequential dapp calls
 		return new(big.Int).Set(common.Big0), nil
 	}
 
-	contract, ok := sdk.atlasVerificationContract[chainId]
-	if !ok {
-		return nil, errors.New("atlasVerification contract not found")
+	ethClient, err := sdk.getEthClient(chainId)
+	if err != nil {
+		return nil, err
 	}
 
-	callOpts, cancel := NewCallOptsWithNetworkDeadline()
+	atlasVerificationAddr, err := config.GetAtlasVerificationAddress(chainId, version)
+	if err != nil {
+		return nil, err
+	}
+
+	atlasVerificationAbi, err := contract.GetAtlasVerificationAbi(version)
+	if err != nil {
+		return nil, err
+	}
+
+	pData, err := atlasVerificationAbi.Pack(getDAppNextNonceFunction, dApp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to pack %s: %w", getDAppNextNonceFunction, err)
+	}
+
+	ctx, cancel := NewContextWithNetworkDeadline()
 	defer cancel()
 
-	return contract.GetDAppNextNonce(callOpts, dApp)
+	bData, err := ethClient.CallContract(
+		ctx,
+		ethereum.CallMsg{
+			To:   &atlasVerificationAddr,
+			Data: pData,
+		},
+		nil,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to call %s: %w", getDAppNextNonceFunction, err)
+	}
+
+	_nonce, err := atlasVerificationAbi.Unpack(getDAppNextNonceFunction, bData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unpack %s: %w", getDAppNextNonceFunction, err)
+	}
+
+	nonce, ok := _nonce[0].(*big.Int)
+	if !ok {
+		return nil, fmt.Errorf("failed to cast %s: %w", getDAppNextNonceFunction, err)
+	}
+
+	return nonce, nil
 }

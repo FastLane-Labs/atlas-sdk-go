@@ -89,8 +89,8 @@ func (d *DAppOperation) EncodeToRaw() *DAppOperationRaw {
 	}
 }
 
-func (d *DAppOperation) Hash(chainId uint64) (common.Hash, error) {
-	eip712Domain, err := config.GetEip712Domain(chainId)
+func (d *DAppOperation) Hash(chainId uint64, version *string) (common.Hash, error) {
+	eip712Domain, err := config.GetEip712Domain(chainId, version)
 	if err != nil {
 		return common.Hash{}, err
 	}
@@ -109,12 +109,12 @@ func (d *DAppOperation) Hash(chainId uint64) (common.Hash, error) {
 	return common.BytesToHash(hash), nil
 }
 
-func (d *DAppOperation) ValidateSignature(chainId uint64) error {
+func (d *DAppOperation) ValidateSignature(chainId uint64, version *string) error {
 	if len(d.Signature) != 65 {
 		return errors.New("invalid signature length")
 	}
 
-	dAppOpHash, err := d.Hash(chainId)
+	dAppOpHash, err := d.Hash(chainId, version)
 	if err != nil {
 		return err
 	}

@@ -157,8 +157,8 @@ func (u *UserOperation) EncodeToRaw() *UserOperationRaw {
 	}
 }
 
-func (u *UserOperation) Hash(trusted bool, chainId uint64) (common.Hash, error) {
-	eip712Domain, err := config.GetEip712Domain(chainId)
+func (u *UserOperation) Hash(trusted bool, chainId uint64, version *string) (common.Hash, error) {
+	eip712Domain, err := config.GetEip712Domain(chainId, version)
 	if err != nil {
 		return common.Hash{}, err
 	}
@@ -182,12 +182,12 @@ func (u *UserOperation) AbiEncode() ([]byte, error) {
 	return userOpArgs.Pack(&u)
 }
 
-func (u *UserOperation) ValidateSignature(chainId uint64) error {
+func (u *UserOperation) ValidateSignature(chainId uint64, version *string) error {
 	if len(u.Signature) != 65 {
 		return errors.New("invalid signature length")
 	}
 
-	userOpHash, err := u.Hash(false, chainId)
+	userOpHash, err := u.Hash(false, chainId, version)
 	if err != nil {
 		return err
 	}
@@ -292,8 +292,8 @@ type UserOperationPartialRaw struct {
 	From  common.Address `json:"from,omitempty"`
 }
 
-func NewUserOperationPartialRaw(chainId uint64, userOp *UserOperation, hints []common.Address) (*UserOperationPartialRaw, error) {
-	userOpHash, err := userOp.Hash(utils.FlagTrustedOpHash(userOp.CallConfig), chainId)
+func NewUserOperationPartialRaw(chainId uint64, version *string, userOp *UserOperation, hints []common.Address) (*UserOperationPartialRaw, error) {
+	userOpHash, err := userOp.Hash(utils.FlagTrustedOpHash(userOp.CallConfig), chainId, version)
 	if err != nil {
 		return nil, err
 	}
