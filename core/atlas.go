@@ -47,7 +47,7 @@ func (sdk *AtlasSdk) Metacall(chainId uint64, version *string, transactOpts *bin
 	case config.AtlasV_1_0, config.AtlasV_1_1:
 		params = append(params, userOp, _solverOps, dAppOp)
 
-	case config.AtlasV_1_2:
+	default:
 		var _gasRefundBeneficiary common.Address
 		if gasRefundBeneficiary != nil {
 			_gasRefundBeneficiary = *gasRefundBeneficiary
