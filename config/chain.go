@@ -84,6 +84,24 @@ func GetVersion(version *string) string {
 	return *version
 }
 
+func GetVersionFromAtlasAddress(chainId uint64, atlasAddr common.Address) (string, error) {
+	mu.RLock()
+	defer mu.RUnlock()
+
+	for _, version := range allVersions {
+		chainConf, ok := chainConfig[chainId][version]
+		if !ok {
+			continue
+		}
+
+		if chainConf.Contract.Atlas == atlasAddr {
+			return version, nil
+		}
+	}
+
+	return "", fmt.Errorf("atlas address not found for chain id %d", chainId)
+}
+
 func GetChainConfig(chainId uint64, version *string) (*ChainConfig, error) {
 	if err := initChainConfig(); err != nil {
 		return nil, err
