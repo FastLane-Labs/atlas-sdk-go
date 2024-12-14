@@ -85,6 +85,10 @@ func GetVersion(version *string) string {
 }
 
 func GetVersionFromAtlasAddress(chainId uint64, atlasAddr common.Address) (string, error) {
+	if err := initChainConfig(); err != nil {
+		return "", err
+	}
+
 	mu.RLock()
 	defer mu.RUnlock()
 
