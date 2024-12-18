@@ -3,9 +3,11 @@ package config
 import (
 	"errors"
 	"fmt"
+	"math/big"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
 )
 
@@ -233,5 +235,14 @@ func GetEip712Domain(chainId uint64, version *string) (*apitypes.TypedDataDomain
 		return nil, err
 	}
 
-	return chainConf.Eip712Domain, nil
+	_chainId := new(big.Int).Set((*big.Int)(chainConf.Eip712Domain.ChainId))
+
+	eip712Domain := &apitypes.TypedDataDomain{
+		Name:              chainConf.Eip712Domain.Name,
+		Version:           chainConf.Eip712Domain.Version,
+		ChainId:           (*math.HexOrDecimal256)(_chainId),
+		VerifyingContract: chainConf.Eip712Domain.VerifyingContract,
+	}
+
+	return eip712Domain, nil
 }
