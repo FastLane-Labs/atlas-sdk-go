@@ -233,5 +233,14 @@ func GetEip712Domain(chainId uint64, version *string) (*apitypes.TypedDataDomain
 		return nil, err
 	}
 
-	return chainConf.Eip712Domain, nil
+	_chainId := *chainConf.Eip712Domain.ChainId
+
+	eip712Domain := &apitypes.TypedDataDomain{
+		Name:              chainConf.Eip712Domain.Name,
+		Version:           chainConf.Eip712Domain.Version,
+		ChainId:           &_chainId,
+		VerifyingContract: chainConf.Eip712Domain.VerifyingContract,
+	}
+
+	return eip712Domain, nil
 }
