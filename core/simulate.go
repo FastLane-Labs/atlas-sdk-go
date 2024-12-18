@@ -269,7 +269,6 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		ctx,
 		ethereum.CallMsg{
 			To:        &simulatorAddr,
-			Gas:       userOp.Gas.Uint64() + solverOp.Gas.Uint64() + 1500000, // Add gas for validateCalls and others
 			GasFeeCap: gasPrice,
 			Value:     new(big.Int).Set(userOp.Value),
 			Data:      pData,
