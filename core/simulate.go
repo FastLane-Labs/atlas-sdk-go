@@ -4,6 +4,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"slices"
+	"strings"
 
 	"github.com/FastLane-Labs/atlas-sdk-go/config"
 	"github.com/FastLane-Labs/atlas-sdk-go/contract"
@@ -296,4 +298,84 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 	}
 
 	return nil
+}
+func (sdk *AtlasSdk) SimulateMetacall(
+	chainId uint64,
+	version *string,
+	from common.Address,
+	userOp *types.UserOperation,
+	solverOps []*types.SolverOperation,
+	dAppOp *types.DAppOperation,
+) (*big.Int, error) {
+	supportedVersions := []string{"1.2", "1.3"}
+	if version == nil || !slices.Contains(supportedVersions, *version) {
+		return nil, fmt.Errorf("unsupported version %s, supported versions are %s", *version, strings.Join(supportedVersions, ", "))
+	}
+
+	ethClient, err := sdk.getEthClient(chainId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get eth client: %w", err)
+	}
+
+	atlasAddr, err := config.GetAtlasAddress(chainId, version)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get atlas address: %w", err)
+	}
+
+	atlasAbi, err := contract.GetAtlasAbi(version)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get atlas abi: %w", err)
+	}
+
+	pData, err := atlasAbi.Pack("metacall", userOp, solverOps, dAppOp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to pack metacall: %w", err)
+	}
+
+	ctx, cancel := NewContextWithNetworkDeadline()
+	defer cancel()
+
+	callMsg := ethereum.CallMsg{
+		To:   &atlasAddr,
+		Data: pData,
+	}
+
+	var traceResult interface{}
+	err = ethClient.Client().CallContext(ctx, &traceResult, "debug_traceCall", callMsg, "latest", map[string]interface{}{
+		"tracer": "callTracer",
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to trace call: %w", err)
+	}
+
+	var parsedBidAmount *big.Int
+	parsed := false
+	for _, logEntry := range traceResult.(map[string]interface{})["logs"].([]interface{}) {
+		eventLog := logEntry.(map[string]interface{})
+		if eventLog["name"] == "SolverTxResult" {
+			inputs := eventLog["inputs"].([]interface{})
+			for _, input := range inputs {
+				inputMap := input.(map[string]interface{})
+				if inputMap["name"] == "bidAmount" {
+					amountStr := inputMap["value"].(string)
+					bidAmount, ok := new(big.Int).SetString(amountStr, 10)
+					if !ok {
+						return nil, fmt.Errorf("failed to parse bid amount")
+					}
+					parsedBidAmount = bidAmount
+					parsed = true
+					break
+				}
+			}
+		}
+		if parsed {
+			break
+		}
+	}
+
+	if !parsed {
+		return nil, fmt.Errorf("SolverTxResult event not found in trace logs")
+	}
+
+	return parsedBidAmount, nil
 }
