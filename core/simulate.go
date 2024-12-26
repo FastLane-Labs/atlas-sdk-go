@@ -211,7 +211,7 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 	return nil
 }
 
-func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, userOp *types.UserOperation, solverOp *types.SolverOperation) (*big.Int, *SolverOperationSimulationError) {
+func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, userOp *types.UserOperation, solverOp *types.SolverOperation, allowTracing bool) (*big.Int, *SolverOperationSimulationError) {
 	ethClient, err := sdk.getEthClient(chainId)
 	if err != nil {
 		return nil, &SolverOperationSimulationError{err: err}
@@ -256,7 +256,7 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 	ctx, cancel := NewContextWithNetworkDeadline()
 	defer cancel()
 
-	if !utils.FlagExPostBids(userOp.CallConfig) {
+	if !utils.FlagExPostBids(userOp.CallConfig) || !allowTracing {
 		bData, err = ethClient.CallContract(ctx, callMsg, nil)
 		if err != nil {
 			return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to call %s: %w", simSolverCallFunction, err)}
