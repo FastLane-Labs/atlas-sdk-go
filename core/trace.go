@@ -22,11 +22,11 @@ type callLog struct {
 
 type callFrame struct {
 	From   common.Address  `json:"from"`
-	To     *common.Address `json:"to,omitempty"`
-	Output []byte          `json:"output,omitempty"`
-	Error  string          `json:"error,omitempty"`
-	Calls  []callFrame     `json:"calls,omitempty"`
-	Logs   []callLog       `json:"logs,omitempty"`
+	To     *common.Address `json:"to"`
+	Output []byte          `json:"output"`
+	Error  string          `json:"error"`
+	Calls  []callFrame     `json:"calls"`
+	Logs   []callLog       `json:"logs"`
 }
 
 const (
