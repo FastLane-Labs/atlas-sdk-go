@@ -36,18 +36,7 @@ const (
 	bidFindSuccessfulError = "BidFindSuccessful"
 )
 
-var (
-	unsupportedTracingVersion = map[string]struct{}{
-		"1.0": {},
-		"1.1": {},
-	}
-)
-
 func (sdk *AtlasSdk) GetSolverBidAmountFromTrace(chainId uint64, version *string, trace *callFrame) (*big.Int, error) {
-	if _, ok := unsupportedTracingVersion[*version]; ok {
-		return nil, fmt.Errorf("unsupported Atlas version %s for tracing", *version)
-	}
-
 	atlasAddr, err := config.GetAtlasAddress(chainId, version)
 	if err != nil {
 		return nil, err

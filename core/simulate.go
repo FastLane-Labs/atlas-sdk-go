@@ -262,10 +262,6 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 			return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to call %s: %w", simSolverCallFunction, err)}
 		}
 	} else {
-		if _, ok := unsupportedTracingVersion[*version]; ok {
-			return nil, &SolverOperationSimulationError{err: fmt.Errorf("unsupported Atlas version %s for tracing", *version)}
-		}
-
 		err = ethClient.Client().CallContext(
 			ctx,
 			&traceResult,
