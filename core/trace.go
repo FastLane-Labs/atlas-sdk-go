@@ -1,12 +1,14 @@
 package core
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"math/big"
 
 	"github.com/FastLane-Labs/atlas-sdk-go/config"
 	"github.com/FastLane-Labs/atlas-sdk-go/contract"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
@@ -30,8 +32,8 @@ type callFrame struct {
 }
 
 const (
-	traceCallMethod     = "debug_traceCall"
-	solverTxResultEvent = "SolverTxResult"
+	traceCallMethod        = "debug_traceCall"
+	bidFindSuccessfulError = "BidFindSuccessful"
 )
 
 var (
@@ -56,45 +58,31 @@ func (sdk *AtlasSdk) GetSolverBidAmountFromTrace(chainId uint64, version *string
 		return nil, err
 	}
 
-	solverTxResultEvent, ok := atlasAbi.Events[solverTxResultEvent]
+	bidFindSuccessfulError, ok := atlasAbi.Errors[bidFindSuccessfulError]
 	if !ok {
-		return nil, fmt.Errorf("solverTxResult event not found in Atlas ABI")
+		return nil, fmt.Errorf("bidFindSuccessful error not found in Atlas ABI")
 	}
 
-	solverTxResult, err := inspectTraceLogs(trace, atlasAddr, solverTxResultEvent.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	var result map[string]interface{}
-
-	err = solverTxResultEvent.Inputs.UnpackIntoMap(result, solverTxResult.Data)
-	if err != nil {
-		return nil, err
-	}
-
-	bidAmount, ok := result["bidAmount"].(*big.Int)
-	if !ok {
-		return nil, fmt.Errorf("bidAmount not found in result")
-	}
-
-	return bidAmount, nil
+	return inspectTraceExPostBidAmount(trace, atlasAddr, bidFindSuccessfulError)
 }
 
-func inspectTraceLogs(trace *callFrame, emittingAddress common.Address, eventHash common.Hash) (*callLog, error) {
-	for _, log := range trace.Logs {
-		if log.Address == emittingAddress && log.Topics[0] == eventHash {
-			return &log, nil
+func inspectTraceExPostBidAmount(trace *callFrame, atlasAddr common.Address, bidFindSuccessfulError abi.Error) (*big.Int, error) {
+	if trace.From == atlasAddr && trace.To != nil && *trace.To == atlasAddr {
+		if bytes.Equal(bidFindSuccessfulError.ID[:4], trace.Output[:4]) {
+			res, err := bidFindSuccessfulError.Inputs.UnpackValues(trace.Output[4:])
+			if err == nil {
+				return res[0].(*big.Int), nil
+			}
 		}
 	}
 
 	if len(trace.Calls) > 0 {
 		for _, call := range trace.Calls {
-			if log, _ := inspectTraceLogs(&call, emittingAddress, eventHash); log != nil {
-				return log, nil
+			if bidAmount, _ := inspectTraceExPostBidAmount(&call, atlasAddr, bidFindSuccessfulError); bidAmount != nil {
+				return bidAmount, nil
 			}
 		}
 	}
 
-	return nil, errors.New("event not found in trace")
+	return nil, errors.New("bid amount not found in trace")
 }
