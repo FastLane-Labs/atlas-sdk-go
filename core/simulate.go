@@ -4,8 +4,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
-	"slices"
-	"strings"
 
 	"github.com/FastLane-Labs/atlas-sdk-go/config"
 	"github.com/FastLane-Labs/atlas-sdk-go/contract"
@@ -213,25 +211,113 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 	return nil
 }
 
-func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, userOp *types.UserOperation, solverOp *types.SolverOperation) *SolverOperationSimulationError {
+func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, userOp *types.UserOperation, solverOp *types.SolverOperation, allowTracing bool) (*big.Int, *SolverOperationSimulationError) {
 	ethClient, err := sdk.getEthClient(chainId)
 	if err != nil {
-		return &SolverOperationSimulationError{err: err}
+		return nil, &SolverOperationSimulationError{err: err}
 	}
 
 	simulatorAddr, err := config.GetSimulatorAddress(chainId, version)
 	if err != nil {
-		return &SolverOperationSimulationError{err: err}
+		return nil, &SolverOperationSimulationError{err: err}
 	}
 
 	simulatorAbi, err := contract.GetSimulatorAbi(version)
 	if err != nil {
-		return &SolverOperationSimulationError{err: err}
+		return nil, &SolverOperationSimulationError{err: err}
 	}
 
+	dAppOp, err := generateDappOperationForSimulator(chainId, version, userOp, solverOp)
+	if err != nil {
+		return nil, &SolverOperationSimulationError{err: err}
+	}
+
+	pData, err := simulatorAbi.Pack(simSolverCallFunction, userOp, solverOp, dAppOp)
+	if err != nil {
+		return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to pack %s: %w", simSolverCallFunction, err)}
+	}
+
+	gasPrice := new(big.Int).Set(userOp.MaxFeePerGas)
+	if solverOp.MaxFeePerGas.Cmp(userOp.MaxFeePerGas) > 0 {
+		gasPrice.Set(solverOp.MaxFeePerGas)
+	}
+
+	var (
+		bData       []byte
+		traceResult callFrame
+		callMsg     = ethereum.CallMsg{
+			To:        &simulatorAddr,
+			GasFeeCap: gasPrice,
+			Value:     new(big.Int).Set(userOp.Value),
+			Data:      pData,
+		}
+	)
+
+	ctx, cancel := NewContextWithNetworkDeadline()
+	defer cancel()
+
+	if !utils.FlagExPostBids(userOp.CallConfig) || !allowTracing {
+		bData, err = ethClient.CallContract(ctx, callMsg, nil)
+		if err != nil {
+			return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to call %s: %w", simSolverCallFunction, err)}
+		}
+	} else {
+		err = ethClient.Client().CallContext(
+			ctx,
+			&traceResult,
+			traceCallMethod,
+			toCallArg(callMsg),
+			"latest",
+			map[string]interface{}{
+				"tracer": "callTracer",
+				"tracerConfig": map[string]interface{}{
+					"withLog": true,
+				},
+			},
+		)
+		if err != nil {
+			return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to trace %s: %w", simSolverCallFunction, err)}
+		}
+
+		if traceResult.Error != "" {
+			return nil, &SolverOperationSimulationError{err: fmt.Errorf("tracing failed for %s: %s", simSolverCallFunction, traceResult.Error)}
+		}
+
+		bData = traceResult.Output
+	}
+
+	validOp, err := simulatorAbi.Unpack(simSolverCallFunction, bData)
+	if err != nil {
+		return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to unpack %s: %w pData %s", simSolverCallFunction, err, hex.EncodeToString(pData))}
+	}
+
+	if !validOp[0].(bool) {
+		result := validOp[1].(uint8)
+		solverOutcomeResult := validOp[2].(*big.Int)
+		return nil, &SolverOperationSimulationError{
+			Result:        result,
+			SolverOutcome: solverOutcomeResult.Uint64(),
+			Data:          hex.EncodeToString(pData),
+		}
+	}
+
+	if !utils.FlagExPostBids(userOp.CallConfig) {
+		// If ex post bids are not enabled, we can directly return the bid amount
+		return solverOp.BidAmount, nil
+	}
+
+	exPostBidAmount, err := sdk.GetSolverBidAmountFromTrace(chainId, version, &traceResult)
+	if err != nil {
+		return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to get solver bid amount from trace: %w pData %s", err, hex.EncodeToString(pData))}
+	}
+
+	return exPostBidAmount, nil
+}
+
+func generateDappOperationForSimulator(chainId uint64, version *string, userOp *types.UserOperation, solverOp *types.SolverOperation) (*types.DAppOperation, error) {
 	userOpHash, err := userOp.Hash(utils.FlagTrustedOpHash(userOp.CallConfig), chainId, version)
 	if err != nil {
-		return &SolverOperationSimulationError{err: fmt.Errorf("failed to hash userOp: %w", err)}
+		return nil, fmt.Errorf("failed to hash userOp: %w", err)
 	}
 
 	dAppOp := &types.DAppOperation{
@@ -249,133 +335,10 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 	if utils.FlagVerifyCallChainHash(userOp.CallConfig) {
 		callChainHash, err := CallChainHash(userOp, []*types.SolverOperation{solverOp})
 		if err != nil {
-			return &SolverOperationSimulationError{err: fmt.Errorf("failed to calculate callChainHash: %w", err)}
+			return nil, fmt.Errorf("failed to calculate callChainHash: %w", err)
 		}
 		dAppOp.CallChainHash = callChainHash
 	}
 
-	pData, err := simulatorAbi.Pack(simSolverCallFunction, userOp, solverOp, dAppOp)
-	if err != nil {
-		return &SolverOperationSimulationError{err: fmt.Errorf("failed to pack %s: %w", simSolverCallFunction, err)}
-	}
-
-	gasPrice := new(big.Int).Set(userOp.MaxFeePerGas)
-	if solverOp.MaxFeePerGas.Cmp(userOp.MaxFeePerGas) > 0 {
-		gasPrice.Set(solverOp.MaxFeePerGas)
-	}
-
-	ctx, cancel := NewContextWithNetworkDeadline()
-	defer cancel()
-
-	bData, err := ethClient.CallContract(
-		ctx,
-		ethereum.CallMsg{
-			To:        &simulatorAddr,
-			Gas:       userOp.Gas.Uint64() + solverOp.Gas.Uint64() + 1500000, // Add gas for validateCalls and others
-			GasFeeCap: gasPrice,
-			Value:     new(big.Int).Set(userOp.Value),
-			Data:      pData,
-		},
-		nil,
-	)
-	if err != nil {
-		return &SolverOperationSimulationError{err: fmt.Errorf("failed to call %s: %w", simSolverCallFunction, err)}
-	}
-
-	validOp, err := simulatorAbi.Unpack(simSolverCallFunction, bData)
-	if err != nil {
-		return &SolverOperationSimulationError{err: fmt.Errorf("failed to unpack %s: %w pData %s", simSolverCallFunction, err, hex.EncodeToString(pData))}
-	}
-
-	if !validOp[0].(bool) {
-		result := validOp[1].(uint8)
-		solverOutcomeResult := validOp[2].(*big.Int)
-		return &SolverOperationSimulationError{
-			Result:        result,
-			SolverOutcome: solverOutcomeResult.Uint64(),
-			Data:          hex.EncodeToString(pData),
-		}
-	}
-
-	return nil
-}
-func (sdk *AtlasSdk) SimulateMetacall(
-	chainId uint64,
-	version *string,
-	from common.Address,
-	userOp *types.UserOperation,
-	solverOps []*types.SolverOperation,
-	dAppOp *types.DAppOperation,
-) (*big.Int, error) {
-	supportedVersions := []string{"1.2", "1.3"}
-	if version == nil || !slices.Contains(supportedVersions, *version) {
-		return nil, fmt.Errorf("unsupported version %s, supported versions are %s", *version, strings.Join(supportedVersions, ", "))
-	}
-
-	ethClient, err := sdk.getEthClient(chainId)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get eth client: %w", err)
-	}
-
-	atlasAddr, err := config.GetAtlasAddress(chainId, version)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get atlas address: %w", err)
-	}
-
-	atlasAbi, err := contract.GetAtlasAbi(version)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get atlas abi: %w", err)
-	}
-
-	pData, err := atlasAbi.Pack("metacall", userOp, solverOps, dAppOp)
-	if err != nil {
-		return nil, fmt.Errorf("failed to pack metacall: %w", err)
-	}
-
-	ctx, cancel := NewContextWithNetworkDeadline()
-	defer cancel()
-
-	callMsg := ethereum.CallMsg{
-		To:   &atlasAddr,
-		Data: pData,
-	}
-
-	var traceResult interface{}
-	err = ethClient.Client().CallContext(ctx, &traceResult, "debug_traceCall", callMsg, "latest", map[string]interface{}{
-		"tracer": "callTracer",
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to trace call: %w", err)
-	}
-
-	var parsedBidAmount *big.Int
-	parsed := false
-	for _, logEntry := range traceResult.(map[string]interface{})["logs"].([]interface{}) {
-		eventLog := logEntry.(map[string]interface{})
-		if eventLog["name"] == "SolverTxResult" {
-			inputs := eventLog["inputs"].([]interface{})
-			for _, input := range inputs {
-				inputMap := input.(map[string]interface{})
-				if inputMap["name"] == "bidAmount" {
-					amountStr := inputMap["value"].(string)
-					bidAmount, ok := new(big.Int).SetString(amountStr, 10)
-					if !ok {
-						return nil, fmt.Errorf("failed to parse bid amount")
-					}
-					parsedBidAmount = bidAmount
-					parsed = true
-					break
-				}
-			}
-		}
-		if parsed {
-			break
-		}
-	}
-
-	if !parsed {
-		return nil, fmt.Errorf("SolverTxResult event not found in trace logs")
-	}
-
-	return parsedBidAmount, nil
+	return dAppOp, nil
 }
