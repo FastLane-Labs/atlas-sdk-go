@@ -270,7 +270,7 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 			ctx,
 			&traceResult,
 			traceCallMethod,
-			callMsg,
+			toCallArg(callMsg),
 			"latest",
 			map[string]interface{}{
 				"tracer": "callTracer",
