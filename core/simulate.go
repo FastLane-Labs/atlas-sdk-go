@@ -312,7 +312,7 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 
 	exPostBidAmount, err := sdk.GetSolverBidAmountFromTrace(chainId, version, &traceResult)
 	if err != nil {
-		return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to get solver bid amount from trace: %w", err)}
+		return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to get solver bid amount from trace: %w pData %s", err, hex.EncodeToString(pData))}
 	}
 
 	return exPostBidAmount, nil
