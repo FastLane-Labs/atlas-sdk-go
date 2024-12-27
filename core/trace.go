@@ -23,7 +23,7 @@ type callLog struct {
 type callFrame struct {
 	From   common.Address  `json:"from"`
 	To     *common.Address `json:"to"`
-	Output []byte          `json:"output"`
+	Output hexutil.Bytes   `json:"output"`
 	Error  string          `json:"error"`
 	Calls  []callFrame     `json:"calls"`
 	Logs   []callLog       `json:"logs"`
