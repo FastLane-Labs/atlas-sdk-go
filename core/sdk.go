@@ -5,13 +5,13 @@ import (
 	"math/big"
 	"sync"
 
+	"github.com/FastLane-Labs/atlas-sdk-go/blockchain"
 	"github.com/FastLane-Labs/atlas-sdk-go/config"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
 )
 
 type AtlasSdk struct {
-	ethClient map[uint64]*ethclient.Client
+	ethClients map[uint64]blockchain.EthClient
 
 	userLastNonSequentialNonce map[uint64]map[string]map[common.Address]*big.Int
 	noncesMu                   map[uint64]map[string]*sync.Mutex
@@ -19,7 +19,7 @@ type AtlasSdk struct {
 	mu sync.Mutex
 }
 
-func NewAtlasSdk(ethClient []*ethclient.Client, chainOverrides map[uint64]map[string]*config.ChainConfig) (*AtlasSdk, error) {
+func NewAtlasSdk(ethClients []blockchain.EthClient, chainOverrides map[uint64]map[string]*config.ChainConfig) (*AtlasSdk, error) {
 	for chainId, chainConf := range chainOverrides {
 		for version, conf := range chainConf {
 			if err := config.OverrideChainConfig(chainId, &version, conf); err != nil {
@@ -29,12 +29,12 @@ func NewAtlasSdk(ethClient []*ethclient.Client, chainOverrides map[uint64]map[st
 	}
 
 	sdk := &AtlasSdk{
-		ethClient:                  make(map[uint64]*ethclient.Client),
+		ethClients:                 make(map[uint64]blockchain.EthClient),
 		userLastNonSequentialNonce: make(map[uint64]map[string]map[common.Address]*big.Int),
 		noncesMu:                   make(map[uint64]map[string]*sync.Mutex),
 	}
 
-	for _, client := range ethClient {
+	for _, client := range ethClients {
 		ctx, cancel := NewContextWithNetworkDeadline()
 		defer cancel()
 
@@ -44,7 +44,7 @@ func NewAtlasSdk(ethClient []*ethclient.Client, chainOverrides map[uint64]map[st
 		}
 
 		chainIdUint64 := chainId.Uint64()
-		sdk.ethClient[chainIdUint64] = client
+		sdk.ethClients[chainIdUint64] = client
 
 		for _, version := range config.GetAllVersions() {
 			if _, ok := sdk.userLastNonSequentialNonce[chainIdUint64]; !ok {
@@ -64,8 +64,8 @@ func NewAtlasSdk(ethClient []*ethclient.Client, chainOverrides map[uint64]map[st
 	return sdk, nil
 }
 
-func (sdk *AtlasSdk) getEthClient(chainId uint64) (*ethclient.Client, error) {
-	client, ok := sdk.ethClient[chainId]
+func (sdk *AtlasSdk) getEthClient(chainId uint64) (blockchain.EthClient, error) {
+	client, ok := sdk.ethClients[chainId]
 	if !ok {
 		return nil, fmt.Errorf("ethereum client not found for chain id %d", chainId)
 	}
