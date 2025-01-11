@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/rpc"
 )
 
 type EthClient interface {
@@ -22,9 +23,5 @@ type EthClient interface {
 	SubscribeFilterLogs(ctx context.Context, q ethereum.FilterQuery, ch chan<- types.Log) (ethereum.Subscription, error)
 	SuggestGasPrice(ctx context.Context) (*big.Int, error)
 	SuggestGasTipCap(ctx context.Context) (*big.Int, error)
-	Client() RpcClient
-}
-
-type RpcClient interface {
-	CallContext(ctx context.Context, result interface{}, method string, args ...interface{}) error
+	Client() *rpc.Client
 }
