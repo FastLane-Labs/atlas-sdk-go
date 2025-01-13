@@ -3,7 +3,7 @@ module github.com/FastLane-Labs/atlas-sdk-go
 go 1.22.2
 
 require (
-	github.com/FastLane-Labs/blockchain-rpc-go v0.0.0-20250113063705-94843afc617d
+	github.com/FastLane-Labs/blockchain-rpc-go v0.0.0-20250113074257-15a9dd51b250
 	github.com/ethereum/go-ethereum v1.14.12
 )
 

@@ -39,6 +39,8 @@ github.com/FastLane-Labs/blockchain-rpc-go v0.0.0-20250112063223-c8ce08b01865 h1
 github.com/FastLane-Labs/blockchain-rpc-go v0.0.0-20250112063223-c8ce08b01865/go.mod h1:jAOZczlxGSDVYOLjyktrAhUcPpcZMmQc3iFSM0CIL+8=
 github.com/FastLane-Labs/blockchain-rpc-go v0.0.0-20250113063705-94843afc617d h1:TPlXukdPwJirmXoURPbZxRlug1ugVME9TvsITCdbsHQ=
 github.com/FastLane-Labs/blockchain-rpc-go v0.0.0-20250113063705-94843afc617d/go.mod h1:jAOZczlxGSDVYOLjyktrAhUcPpcZMmQc3iFSM0CIL+8=
+github.com/FastLane-Labs/blockchain-rpc-go v0.0.0-20250113074257-15a9dd51b250 h1:LpbfeaXji3JDgZqcfZhMHhFjbj3f8OZkBFrTfff/O8Y=
+github.com/FastLane-Labs/blockchain-rpc-go v0.0.0-20250113074257-15a9dd51b250/go.mod h1:jAOZczlxGSDVYOLjyktrAhUcPpcZMmQc3iFSM0CIL+8=
 github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERoyfY=
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
 github.com/StackExchange/wmi v1.2.1 h1:VIkavFPXSjcnS+O8yTq7NI32k0R5Aj+v39y29VYDOSA=
