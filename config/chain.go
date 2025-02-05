@@ -41,7 +41,7 @@ var (
 	allVersions = []string{AtlasV_1_0, AtlasV_1_1, AtlasV_1_2, AtlasV_1_3}
 )
 
-func initChainConfig() error {
+func InitChainConfig() error {
 	var initErr error
 
 	initOnce.Do(func() {
@@ -87,8 +87,11 @@ func GetVersion(version *string) string {
 }
 
 func GetVersionFromAtlasAddress(chainId uint64, atlasAddr common.Address) (string, error) {
-	if err := initChainConfig(); err != nil {
-		return "", err
+	chainConfigInitialized := len(chainConfig) > 0
+	if !chainConfigInitialized {
+		if err := InitChainConfig(); err != nil {
+			return "", err
+		}
 	}
 
 	mu.RLock()
@@ -109,8 +112,11 @@ func GetVersionFromAtlasAddress(chainId uint64, atlasAddr common.Address) (strin
 }
 
 func GetChainConfig(chainId uint64, version *string) (*ChainConfig, error) {
-	if err := initChainConfig(); err != nil {
-		return nil, err
+	chainConfigInitialized := len(chainConfig) > 0
+	if !chainConfigInitialized {
+		if err := InitChainConfig(); err != nil {
+			return nil, err
+		}
 	}
 
 	v := GetVersion(version)

@@ -21,6 +21,10 @@ type AtlasSdk struct {
 }
 
 func NewAtlasSdk(rpcClients []rpc.IRpcClient, chainOverrides map[uint64]map[string]*config.ChainConfig) (*AtlasSdk, error) {
+	if err := config.InitChainConfig(); err != nil {
+		return nil, err
+	}
+
 	for chainId, chainConf := range chainOverrides {
 		for version, conf := range chainConf {
 			if err := config.OverrideChainConfig(chainId, &version, conf); err != nil {
