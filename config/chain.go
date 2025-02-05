@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
@@ -34,21 +35,41 @@ const (
 var (
 	DEFAULT_MULTICALL3 = common.HexToAddress("0xcA11bde05977b3631167028862bE2a173976CA11")
 	chainConfig        = map[uint64]map[string]*ChainConfig{} // Indexed by [chainId][atlasVersion]
+	initOnce           sync.Once
+	mu                 sync.RWMutex
 
 	allVersions = []string{AtlasV_1_0, AtlasV_1_1, AtlasV_1_2, AtlasV_1_3}
 )
 
 func InitChainConfig() error {
-	remoteConfig, err := downloadChainConfig()
-	if err != nil {
-		return err
-	}
+	var initErr error
 
-	for chainId, config := range remoteConfig {
-		chainConfig[chainId] = config
-	}
+	initOnce.Do(func() {
+		mu.RLock()
 
-	return nil
+		if len(chainConfig) > 0 {
+			// This can happen when chain config has been overridden before initChainConfig was called
+			mu.RUnlock()
+			return
+		}
+
+		mu.RUnlock()
+
+		remoteConfig, err := downloadChainConfig()
+		if err != nil {
+			initErr = err
+			return
+		}
+
+		mu.Lock()
+		defer mu.Unlock()
+
+		for chainId, config := range remoteConfig {
+			chainConfig[chainId] = config
+		}
+	})
+
+	return initErr
 }
 
 func GetAllVersions() []string {
@@ -66,6 +87,16 @@ func GetVersion(version *string) string {
 }
 
 func GetVersionFromAtlasAddress(chainId uint64, atlasAddr common.Address) (string, error) {
+	chainConfigInitialized := len(chainConfig) > 0
+	if !chainConfigInitialized {
+		if err := InitChainConfig(); err != nil {
+			return "", err
+		}
+	}
+
+	mu.RLock()
+	defer mu.RUnlock()
+
 	for _, version := range allVersions {
 		chainConf, ok := chainConfig[chainId][version]
 		if !ok {
@@ -81,7 +112,17 @@ func GetVersionFromAtlasAddress(chainId uint64, atlasAddr common.Address) (strin
 }
 
 func GetChainConfig(chainId uint64, version *string) (*ChainConfig, error) {
+	chainConfigInitialized := len(chainConfig) > 0
+	if !chainConfigInitialized {
+		if err := InitChainConfig(); err != nil {
+			return nil, err
+		}
+	}
+
 	v := GetVersion(version)
+
+	mu.RLock()
+	defer mu.RUnlock()
 
 	_chainConfig, ok := chainConfig[chainId][v]
 	if !ok {
@@ -137,6 +178,9 @@ func OverrideChainConfig(chainId uint64, version *string, config *ChainConfig) e
 	}
 
 	v := GetVersion(version)
+
+	mu.Lock()
+	defer mu.Unlock()
 
 	if chainConfig[chainId] == nil {
 		chainConfig[chainId] = make(map[string]*ChainConfig)
