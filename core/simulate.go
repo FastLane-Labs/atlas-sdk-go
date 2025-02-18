@@ -16,6 +16,7 @@ import (
 const (
 	simUserOperationFunction = "simUserOperation"
 	simSolverCallFunction    = "simSolverCall"
+	minGasBuffer             = uint64(1_500_000)
 )
 
 var (
@@ -183,7 +184,7 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 		ctx,
 		ethereum.CallMsg{
 			To:        &simulatorAddr,
-			Gas:       userOp.Gas.Uint64() + 1500000, // Add gas for validateCalls and others
+			Gas:       userOp.Gas.Uint64() + minGasBuffer,
 			GasFeeCap: new(big.Int).Set(userOp.MaxFeePerGas),
 			Value:     new(big.Int).Set(userOp.Value),
 			Data:      pData,
@@ -242,11 +243,23 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		gasPrice.Set(solverOp.MaxFeePerGas)
 	}
 
+	gasBuffer := minGasBuffer
+
+	solverGasLimit, err := sdk.GetDAppSolverGasLimit(chainId, userOp.Control)
+	if err != nil {
+		return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to get solver gas limit: %w", err)}
+	}
+
+	if solverGasLimit.Uint64() > gasBuffer {
+		gasBuffer = solverGasLimit.Uint64()
+	}
+
 	var (
 		bData       []byte
 		traceResult callFrame
 		callMsg     = ethereum.CallMsg{
 			To:        &simulatorAddr,
+			Gas:       userOp.Gas.Uint64() + solverOp.Gas.Uint64() + gasBuffer,
 			GasFeeCap: gasPrice,
 			Value:     new(big.Int).Set(userOp.Value),
 			Data:      pData,
