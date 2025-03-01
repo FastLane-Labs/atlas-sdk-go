@@ -9,6 +9,8 @@ import (
 	"github.com/FastLane-Labs/blockchain-rpc-go/eth"
 	"github.com/FastLane-Labs/blockchain-rpc-go/rpc"
 	"github.com/ethereum/go-ethereum/common"
+	gethEthClient "github.com/ethereum/go-ethereum/ethclient"
+	gethRpc "github.com/ethereum/go-ethereum/rpc"
 )
 
 type AtlasSdk struct {
@@ -20,7 +22,7 @@ type AtlasSdk struct {
 	mu sync.Mutex
 }
 
-func NewAtlasSdk(rpcClients []rpc.IRpcClient, chainOverrides map[uint64]map[string]*config.ChainConfig) (*AtlasSdk, error) {
+func NewAtlasSdk(rpcClients []interface{}, chainOverrides map[uint64]map[string]*config.ChainConfig) (*AtlasSdk, error) {
 	if err := config.InitChainConfig(); err != nil {
 		return nil, err
 	}
@@ -40,7 +42,20 @@ func NewAtlasSdk(rpcClients []rpc.IRpcClient, chainOverrides map[uint64]map[stri
 	}
 
 	for _, rpcClient := range rpcClients {
-		client := eth.NewClient(rpcClient)
+		var client *eth.EthClient
+
+		switch v := rpcClient.(type) {
+		case *eth.EthClient:
+			client = v
+		case *rpc.RpcClient:
+			client = eth.NewClient(v)
+		case *gethRpc.Client:
+			client = eth.NewClient(v)
+		case *gethEthClient.Client:
+			client = eth.NewClient(v.Client())
+		default:
+			return nil, fmt.Errorf("unsupported rpc client type: %T", v)
+		}
 
 		ctx, cancel := NewContextWithNetworkDeadline()
 		defer cancel()
