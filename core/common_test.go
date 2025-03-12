@@ -8,8 +8,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func generateUserOperation() *types.UserOperation {
-	return &types.UserOperation{
+func generateUserOperation() types.UserOperation {
+	return &types.UserOperationLegacy{
 		From:         common.HexToAddress("0x1"),
 		To:           common.HexToAddress("0x2"),
 		Deadline:     big.NewInt(100),

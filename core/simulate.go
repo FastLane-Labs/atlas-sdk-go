@@ -156,7 +156,7 @@ func (e *SolverOperationSimulationError) Error() string {
 	)
 }
 
-func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, userOp *types.UserOperation) *UserOperationSimulationError {
+func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, userOp types.UserOperation) *UserOperationSimulationError {
 	ethClient, err := sdk.getEthClient(chainId)
 	if err != nil {
 		return &UserOperationSimulationError{err: err}
@@ -184,9 +184,9 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 		ctx,
 		ethereum.CallMsg{
 			To:        &simulatorAddr,
-			Gas:       userOp.Gas.Uint64() + minGasBuffer,
-			GasFeeCap: new(big.Int).Set(userOp.MaxFeePerGas),
-			Value:     new(big.Int).Set(userOp.Value),
+			Gas:       userOp.GetGas().Uint64() + minGasBuffer,
+			GasFeeCap: new(big.Int).Set(userOp.GetMaxFeePerGas()),
+			Value:     new(big.Int).Set(userOp.GetValue()),
 			Data:      pData,
 		},
 		nil)
@@ -212,7 +212,7 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 	return nil
 }
 
-func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, userOp *types.UserOperation, solverOp *types.SolverOperation, allowTracing bool) (*big.Int, *SolverOperationSimulationError) {
+func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, userOp types.UserOperation, solverOp *types.SolverOperation, allowTracing bool) (*big.Int, *SolverOperationSimulationError) {
 	ethClient, err := sdk.getEthClient(chainId)
 	if err != nil {
 		return nil, &SolverOperationSimulationError{err: err}
@@ -238,14 +238,14 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to pack %s: %w", simSolverCallFunction, err)}
 	}
 
-	gasPrice := new(big.Int).Set(userOp.MaxFeePerGas)
-	if solverOp.MaxFeePerGas.Cmp(userOp.MaxFeePerGas) > 0 {
+	gasPrice := new(big.Int).Set(userOp.GetMaxFeePerGas())
+	if solverOp.MaxFeePerGas.Cmp(userOp.GetMaxFeePerGas()) > 0 {
 		gasPrice.Set(solverOp.MaxFeePerGas)
 	}
 
 	gasBuffer := minGasBuffer
 
-	solverGasLimit, err := sdk.GetDAppSolverGasLimit(chainId, userOp.Control)
+	solverGasLimit, err := sdk.GetDAppSolverGasLimit(chainId, userOp.GetControl())
 	if err != nil {
 		return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to get solver gas limit: %w", err)}
 	}
@@ -259,9 +259,9 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		traceResult callFrame
 		callMsg     = ethereum.CallMsg{
 			To:        &simulatorAddr,
-			Gas:       userOp.Gas.Uint64() + solverOp.Gas.Uint64() + gasBuffer,
+			Gas:       userOp.GetGas().Uint64() + solverOp.Gas.Uint64() + gasBuffer,
 			GasFeeCap: gasPrice,
-			Value:     new(big.Int).Set(userOp.Value),
+			Value:     new(big.Int).Set(userOp.GetValue()),
 			Data:      pData,
 		}
 	)
@@ -269,7 +269,7 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 	ctx, cancel := NewContextWithNetworkDeadline()
 	defer cancel()
 
-	if !utils.FlagExPostBids(userOp.CallConfig) || !allowTracing {
+	if !utils.FlagExPostBids(userOp.GetCallConfig()) || !allowTracing {
 		bData, err = ethClient.CallContract(ctx, callMsg, nil)
 		if err != nil {
 			return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to call %s: %w", simSolverCallFunction, err)}
@@ -314,7 +314,7 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		}
 	}
 
-	if !utils.FlagExPostBids(userOp.CallConfig) {
+	if !utils.FlagExPostBids(userOp.GetCallConfig()) {
 		// If ex post bids are not enabled, we can directly return the bid amount
 		return solverOp.BidAmount, nil
 	}
@@ -327,25 +327,25 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 	return exPostBidAmount, nil
 }
 
-func generateDappOperationForSimulator(chainId uint64, version *string, userOp *types.UserOperation, solverOp *types.SolverOperation) (*types.DAppOperation, error) {
-	userOpHash, err := userOp.Hash(utils.FlagTrustedOpHash(userOp.CallConfig), chainId, version)
+func generateDappOperationForSimulator(chainId uint64, version *string, userOp types.UserOperation, solverOp *types.SolverOperation) (*types.DAppOperation, error) {
+	userOpHash, err := userOp.Hash(utils.FlagTrustedOpHash(userOp.GetCallConfig()), chainId, version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash userOp: %w", err)
 	}
 
 	dAppOp := &types.DAppOperation{
 		From:          common.Address{},
-		To:            userOp.To,
+		To:            userOp.GetTo(),
 		Nonce:         big.NewInt(0),
-		Deadline:      userOp.Deadline,
-		Control:       userOp.Control,
+		Deadline:      userOp.GetDeadline(),
+		Control:       userOp.GetControl(),
 		Bundler:       common.Address{},
 		UserOpHash:    userOpHash,
 		CallChainHash: common.Hash{},
 		Signature:     []byte(""),
 	}
 
-	if utils.FlagVerifyCallChainHash(userOp.CallConfig) {
+	if utils.FlagVerifyCallChainHash(userOp.GetCallConfig()) {
 		callChainHash, err := CallChainHash(userOp, []*types.SolverOperation{solverOp})
 		if err != nil {
 			return nil, fmt.Errorf("failed to calculate callChainHash: %w", err)

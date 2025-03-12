@@ -18,13 +18,13 @@ const (
 	getDAppNextNonceFunction            = "getDAppNextNonce"
 )
 
-func (sdk *AtlasSdk) SetUserNonce(chainId uint64, version *string, userOp *types.UserOperation) error {
-	nonce, err := sdk.GetUserNextNonce(chainId, version, userOp.From, userOp.CallConfig)
+func (sdk *AtlasSdk) SetUserNonce(chainId uint64, version *string, userOp types.UserOperation) error {
+	nonce, err := sdk.GetUserNextNonce(chainId, version, userOp.GetFrom(), userOp.GetCallConfig())
 	if err != nil {
 		return err
 	}
 
-	userOp.Nonce = nonce
+	userOp.SetNonce(nonce)
 
 	return nil
 }

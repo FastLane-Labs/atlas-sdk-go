@@ -29,7 +29,8 @@ const (
 	AtlasV_1_1   = "1.1"
 	AtlasV_1_2   = "1.2"
 	AtlasV_1_3   = "1.3"
-	AtlasVLatest = AtlasV_1_3
+	AtlasV_1_5   = "1.5"
+	AtlasVLatest = AtlasV_1_5
 )
 
 var (
@@ -38,7 +39,7 @@ var (
 	initOnce           sync.Once
 	mu                 sync.RWMutex
 
-	allVersions = []string{AtlasV_1_0, AtlasV_1_1, AtlasV_1_2, AtlasV_1_3}
+	allVersions = []string{AtlasV_1_0, AtlasV_1_1, AtlasV_1_2, AtlasV_1_3, AtlasV_1_5}
 )
 
 func InitChainConfig() error {
