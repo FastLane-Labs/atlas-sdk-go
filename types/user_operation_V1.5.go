@@ -6,6 +6,7 @@ import (
 
 	"github.com/FastLane-Labs/atlas-sdk-go/utils"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/signer/core/apitypes"
 )
 
 type UserOperationV15 struct {
@@ -15,6 +16,47 @@ type UserOperationV15 struct {
 
 func (u *UserOperationV15) GetDappGasLimit() *big.Int {
 	return u.DappGasLimit
+}
+
+func (u *UserOperationV15) toTypedDataTypes(trusted bool) apitypes.Types {
+	t := apitypes.Types{
+		"EIP712Domain": []apitypes.Type{
+			{Name: "name", Type: "string"},
+			{Name: "version", Type: "string"},
+			{Name: "chainId", Type: "uint256"},
+			{Name: "verifyingContract", Type: "address"},
+		},
+	}
+
+	if trusted {
+		t["UserOperation"] = []apitypes.Type{
+			{Name: "from", Type: "address"},
+			{Name: "to", Type: "address"},
+			{Name: "dapp", Type: "address"},
+			{Name: "control", Type: "address"},
+			{Name: "callConfig", Type: "uint32"},
+			{Name: "dappGasLimit", Type: "uint256"},
+			{Name: "sessionKey", Type: "address"},
+		}
+	} else {
+		t["UserOperation"] = []apitypes.Type{
+			{Name: "from", Type: "address"},
+			{Name: "to", Type: "address"},
+			{Name: "value", Type: "uint256"},
+			{Name: "gas", Type: "uint256"},
+			{Name: "maxFeePerGas", Type: "uint256"},
+			{Name: "nonce", Type: "uint256"},
+			{Name: "deadline", Type: "uint256"},
+			{Name: "dapp", Type: "address"},
+			{Name: "control", Type: "address"},
+			{Name: "callConfig", Type: "uint32"},
+			{Name: "dappGasLimit", Type: "uint256"},
+			{Name: "sessionKey", Type: "address"},
+			{Name: "data", Type: "bytes"},
+		}
+	}
+
+	return t
 }
 
 func (u *UserOperationV15) EncodeToRaw() *UserOperationRaw {

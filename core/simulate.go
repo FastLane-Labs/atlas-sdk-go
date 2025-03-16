@@ -14,9 +14,10 @@ import (
 )
 
 const (
-	simUserOperationFunction = "simUserOperation"
-	simSolverCallFunction    = "simSolverCall"
-	minGasBuffer             = uint64(1_500_000)
+	simUserOperationFunction         = "simUserOperation"
+	simSolverCallFunction            = "simSolverCall"
+	minGasBuffer                     = uint64(1_500_000)
+	estimateMetacallGasLimitFunction = "estimateMetacallGasLimit"
 )
 
 var (
@@ -62,6 +63,9 @@ var (
 		27: "InvalidCallChainHash",
 		28: "DAppNotEnabled",
 		29: "BothUserAndDAppNoncesCannotBeSequential",
+		30: "MetacallGasLimitTooLow",
+		31: "MetacallGasLimitTooHigh",
+		32: "DAppGasLimitMismatch",
 	}
 
 	SolverOutcome = map[uint64]string{
@@ -354,4 +358,58 @@ func generateDappOperationForSimulator(chainId uint64, version *string, userOp t
 	}
 
 	return dAppOp, nil
+}
+
+func (sdk *AtlasSdk) EstimateMetacallGasLimit(chainId uint64, version *string, userOp types.UserOperation, solverOps []*types.SolverOperation) (uint64, error) {
+	minVersion := config.AtlasV_1_5
+	if minSupport, err := config.IsVersionAtLeast(version, &minVersion); err != nil || !minSupport {
+		return 0, fmt.Errorf("metacall gas limit estimation is only supported for Atlas v1.5 and above")
+	}
+
+	simulatorAbi, err := contract.GetSimulatorAbi(version)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get simulator abi: %w", err)
+	}
+
+	simulatorAddr, err := config.GetSimulatorAddress(chainId, version)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get simulator address: %w", err)
+	}
+
+	ethClient, err := sdk.getEthClient(chainId)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get eth client: %w", err)
+	}
+
+	userOpV15, ok := userOp.(*types.UserOperationV15)
+	if !ok {
+		return 0, fmt.Errorf("metacall gas limit estimation is only supported for UserOperationV1.5")
+	}
+
+	pData, err := simulatorAbi.Pack(estimateMetacallGasLimitFunction, userOpV15, solverOps)
+	if err != nil {
+		return 0, fmt.Errorf("failed to pack %s: %w", estimateMetacallGasLimitFunction, err)
+	}
+
+	ctx, cancel := NewContextWithNetworkDeadline()
+	defer cancel()
+
+	bData, err := ethClient.CallContract(ctx, ethereum.CallMsg{
+		To:   &simulatorAddr,
+		Data: pData,
+	}, nil)
+	if err != nil {
+		return 0, fmt.Errorf("failed to call %s: %w", estimateMetacallGasLimitFunction, err)
+	}
+
+	gasLimit, err := simulatorAbi.Unpack(estimateMetacallGasLimitFunction, bData)
+	if err != nil {
+		return 0, fmt.Errorf("failed to unpack %s: %w", estimateMetacallGasLimitFunction, err)
+	}
+
+	if len(gasLimit) != 1 {
+		return 0, fmt.Errorf("expected 1 gas limit, got %d", len(gasLimit))
+	}
+
+	return gasLimit[0].(*big.Int).Uint64(), nil
 }

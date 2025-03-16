@@ -25,6 +25,14 @@ func generateUserOperation() *UserOperationLegacy {
 	}
 }
 
+func generateUserOperationV15() *UserOperationV15 {
+	legacyOp := generateUserOperation()
+	return &UserOperationV15{
+		UserOperationLegacy: *legacyOp,
+		DappGasLimit:        big.NewInt(600_000),
+	}
+}
+
 func TestUserOperationHashDefault(t *testing.T) {
 	t.Parallel()
 
