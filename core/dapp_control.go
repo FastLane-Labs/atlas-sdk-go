@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"fmt"
 	"math/big"
 
 	"github.com/FastLane-Labs/atlas-sdk-go/config"
@@ -151,7 +152,12 @@ func (sdk *AtlasSdk) GetDAppSolverGasLimit(chainId uint64, dAppControlAddr commo
 	return new(big.Int).SetUint64(uint64(solverGasLimit)), nil
 }
 
-func (sdk *AtlasSdk) GetDAppGasLimit(chainId uint64, dAppControlAddr common.Address) (uint32, error) {
+func (sdk *AtlasSdk) GetDAppGasLimit(chainId uint64, version *string, dAppControlAddr common.Address) (uint32, error) {
+	minVersion := config.AtlasV_1_5
+	if minSupport, err := config.IsVersionAtLeast(version, &minVersion); err != nil || !minSupport {
+		return 0, fmt.Errorf("GetDAppGasLimit is only supported for Atlas v1.5 and above")
+	}
+
 	dAppControlContract, err := sdk.getDAppControlV15Contract(chainId, dAppControlAddr)
 	if err != nil {
 		return 0, err
