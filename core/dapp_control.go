@@ -150,3 +150,20 @@ func (sdk *AtlasSdk) GetDAppSolverGasLimit(chainId uint64, dAppControlAddr commo
 
 	return new(big.Int).SetUint64(uint64(solverGasLimit)), nil
 }
+
+func (sdk *AtlasSdk) GetDAppGasLimit(chainId uint64, dAppControlAddr common.Address) (uint32, error) {
+	dAppControlContract, err := sdk.getDAppControlV15Contract(chainId, dAppControlAddr)
+	if err != nil {
+		return 0, err
+	}
+
+	callOpts, cancel := NewCallOptsWithNetworkDeadline()
+	defer cancel()
+
+	dAppGasLimit, err := dAppControlContract.GetDAppGasLimit(callOpts)
+	if err != nil {
+		return 0, err
+	}
+
+	return dAppGasLimit, nil
+}
