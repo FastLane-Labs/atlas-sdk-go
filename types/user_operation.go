@@ -26,7 +26,7 @@ type UserOperation interface {
 	GetDapp() common.Address
 	GetControl() common.Address
 	GetCallConfig() uint32
-	GetDappGasLimit() *big.Int
+	GetDappGasLimit() uint32
 	GetSessionKey() common.Address
 	GetData() []byte
 	GetSignature() []byte
@@ -104,7 +104,7 @@ func (u *UserOperationRaw) Decode() UserOperation {
 				SessionKey:   u.SessionKey,
 				Data:         u.Data,
 			},
-			DappGasLimit: u.DappGasLimit.ToInt(),
+			DappGasLimit: uint32(u.DappGasLimit.ToInt().Uint64()),
 		}
 	} else {
 		return &UserOperationLegacy{

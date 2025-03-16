@@ -108,8 +108,8 @@ func (u *UserOperationLegacy) GetSignature() []byte {
 	return u.Signature
 }
 
-func (u *UserOperationLegacy) GetDappGasLimit() *big.Int {
-	return nil
+func (u *UserOperationLegacy) GetDappGasLimit() uint32 {
+	return 0
 }
 
 func (u *UserOperationLegacy) SetNonce(nonce *big.Int) {

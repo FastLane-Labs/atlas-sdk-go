@@ -57,7 +57,7 @@ func (sdk *AtlasSdk) GetDAppCallConfig(chainId uint64, dAppControlAddr common.Ad
 	return callConfig, nil
 }
 
-func (sdk *AtlasSdk) GetDAppConfig(chainId uint64, version *string, userOp types.UserOperation, dAppControlAddr common.Address) (*types.DAppConfig, error) {
+func (sdk *AtlasSdk) GetDAppConfig(chainId uint64, version *string, userOp types.UserOperation, dAppControlAddr common.Address) (types.DAppConfig, error) {
 	if *version == config.AtlasV_1_5 {
 		dAppControlContract, err := sdk.getDAppControlV15Contract(chainId, dAppControlAddr)
 		if err != nil {
@@ -68,8 +68,8 @@ func (sdk *AtlasSdk) GetDAppConfig(chainId uint64, version *string, userOp types
 		defer cancel()
 
 		dappGasLimit := userOp.GetDappGasLimit()
-		if dappGasLimit == nil {
-			return nil, errors.New("dappGasLimit is nil")
+		if dappGasLimit == 0 {
+			return nil, errors.New("dappGasLimit is 0")
 		}
 
 		dAppConfig, err := dAppControlContract.GetDAppConfig(callOpts, dappcontrol_1_5.UserOperation{
@@ -84,19 +84,22 @@ func (sdk *AtlasSdk) GetDAppConfig(chainId uint64, version *string, userOp types
 			Control:      userOp.GetControl(),
 			CallConfig:   userOp.GetCallConfig(),
 			SessionKey:   userOp.GetSessionKey(),
-			DappGasLimit: uint32(userOp.GetDappGasLimit().Uint64()),
+			DappGasLimit: userOp.GetDappGasLimit(),
 			Data:         userOp.GetData(),
 			Signature:    userOp.GetSignature(),
-		})
+		})	
 		if err != nil {
 			return nil, err
 		}
 
-		return &types.DAppConfig{
-			To:             dAppConfig.To,
-			CallConfig:     dAppConfig.CallConfig,
-			BidToken:       dAppConfig.BidToken,
-			SolverGasLimit: dAppConfig.SolverGasLimit,
+		return &types.DAppConfigV15{
+			DAppConfigLegacy: types.DAppConfigLegacy{
+				To:             dAppConfig.To,
+				CallConfig:     dAppConfig.CallConfig,
+				BidToken:       dAppConfig.BidToken,
+				SolverGasLimit: dAppConfig.SolverGasLimit,
+			},
+			DappGasLimit: dAppConfig.DappGasLimit,
 		}, nil
 	}
 
@@ -127,7 +130,7 @@ func (sdk *AtlasSdk) GetDAppConfig(chainId uint64, version *string, userOp types
 		return nil, err
 	}
 
-	return &types.DAppConfig{
+	return &types.DAppConfigLegacy{
 		To:             dAppConfig.To,
 		CallConfig:     dAppConfig.CallConfig,
 		BidToken:       dAppConfig.BidToken,
