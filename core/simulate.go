@@ -195,7 +195,15 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 		},
 		nil)
 	if err != nil {
-		return &UserOperationSimulationError{err: fmt.Errorf("failed to call %s: %w", simUserOperationFunction, err)}
+		return &UserOperationSimulationError{err: fmt.Errorf(
+			"failed to call %s: %w, simulatorAddr %s, pData %s, version %s, userOp %s",
+			simUserOperationFunction,
+			err,
+			simulatorAddr,
+			hex.EncodeToString(pData),
+			*version,
+			userOp.EncodeToRaw(),
+		)}
 	}
 
 	validOp, err := simulatorAbi.Unpack(simUserOperationFunction, bData)
