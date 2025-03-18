@@ -108,7 +108,7 @@ func TestUserOperationV15HashDefault(t *testing.T) {
 	t.Parallel()
 
 	userOp := generateUserOperationV15()
-	want := common.HexToHash("0xc8a126ab150c20c7be0555d7fefce64846bfcbe3bdcebd030534540382947f5b")
+	want := common.HexToHash("0xbe49dd84d9a2d5713920fa3884a0c52ee40eab8e33b7547f8d4e206ad77d7ce2")
 
 	result, err := userOp.Hash(false, 0, nil)
 	if err != nil {
@@ -124,7 +124,7 @@ func TestUserOperationV15HashTrusted(t *testing.T) {
 	t.Parallel()
 
 	userOp := generateUserOperationV15()
-	want := common.HexToHash("0x2efae21e56b5e2d14ba71e07f62e9568b87144993b7e984190388d9a58facb93")
+	want := common.HexToHash("0x006f92454adbab861e749a27a6e84b65b33f7293ff3ced2b1e48c0eb15647e8e")
 
 	result, err := userOp.Hash(true, 0, nil)
 	if err != nil {

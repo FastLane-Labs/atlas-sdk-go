@@ -105,7 +105,7 @@ func (u *UserOperationV15) toTypedDataTypes(trusted bool) apitypes.Types {
 			{Name: "dapp", Type: "address"},
 			{Name: "control", Type: "address"},
 			{Name: "callConfig", Type: "uint32"},
-			{Name: "dappGasLimit", Type: "uint256"},
+			{Name: "dappGasLimit", Type: "uint32"},
 			{Name: "sessionKey", Type: "address"},
 		}
 	} else {
@@ -120,7 +120,7 @@ func (u *UserOperationV15) toTypedDataTypes(trusted bool) apitypes.Types {
 			{Name: "dapp", Type: "address"},
 			{Name: "control", Type: "address"},
 			{Name: "callConfig", Type: "uint32"},
-			{Name: "dappGasLimit", Type: "uint256"},
+			{Name: "dappGasLimit", Type: "uint32"},
 			{Name: "sessionKey", Type: "address"},
 			{Name: "data", Type: "bytes"},
 		}
