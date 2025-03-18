@@ -12,8 +12,76 @@ import (
 )
 
 type UserOperationV15 struct {
+	From         common.Address
+	To           common.Address
+	Value        *big.Int
+	Gas          *big.Int
+	MaxFeePerGas *big.Int
+	Nonce        *big.Int
+	Deadline     *big.Int
+	Dapp         common.Address
+	Control      common.Address
+	CallConfig   uint32
 	DappGasLimit uint32
-	UserOperationLegacy
+	SessionKey   common.Address
+	Data         []byte
+	Signature    []byte
+}
+
+func (u *UserOperationV15) GetFrom() common.Address {
+	return u.From
+}
+
+func (u *UserOperationV15) GetTo() common.Address {
+	return u.To
+}
+
+func (u *UserOperationV15) GetValue() *big.Int {
+	return u.Value
+}
+
+func (u *UserOperationV15) GetGas() *big.Int {
+	return u.Gas
+}
+
+func (u *UserOperationV15) GetMaxFeePerGas() *big.Int {
+	return u.MaxFeePerGas
+}
+
+func (u *UserOperationV15) GetNonce() *big.Int {
+	return u.Nonce
+}
+
+func (u *UserOperationV15) GetDeadline() *big.Int {
+	return u.Deadline
+}
+
+func (u *UserOperationV15) GetDapp() common.Address {
+	return u.Dapp
+}
+
+func (u *UserOperationV15) GetControl() common.Address {
+	return u.Control
+}
+
+func (u *UserOperationV15) GetCallConfig() uint32 {
+	return u.CallConfig
+}
+
+func (u *UserOperationV15) GetSessionKey() common.Address {
+	return u.SessionKey
+}
+
+func (u *UserOperationV15) GetData() []byte {
+	return u.Data
+}
+
+func (u *UserOperationV15) GetSignature() []byte {
+	return u.Signature
+}
+
+func (u *UserOperationV15) SetNonce(nonce *big.Int) {
+	u.Nonce = nonce
 }
 
 func (u *UserOperationV15) GetDappGasLimit() uint32 {
@@ -61,18 +129,40 @@ func (u *UserOperationV15) toTypedDataTypes(trusted bool) apitypes.Types {
 	return t
 }
 
+func (u *UserOperationV15) Sanitize() {
+	if u.Value == nil {
+		u.Value = big.NewInt(0)
+	}
+
+	if u.Gas == nil {
+		u.Gas = big.NewInt(0)
+	}
+
+	if u.MaxFeePerGas == nil {
+		u.MaxFeePerGas = big.NewInt(0)
+	}
+
+	if u.Nonce == nil {
+		u.Nonce = big.NewInt(0)
+	}
+
+	if u.Deadline == nil {
+		u.Deadline = big.NewInt(0)
+	}
+}
+
 func (u *UserOperationV15) toTypedDataMessage(trusted bool) apitypes.TypedDataMessage {
 	u.Sanitize()
 
 	if trusted {
 		return apitypes.TypedDataMessage{
-			"from":       u.From.Hex(),
-			"to":         u.To.Hex(),
-			"dapp":       u.Dapp.Hex(),
-			"control":    u.Control.Hex(),
-			"callConfig": big.NewInt(int64(u.CallConfig)),
+			"from":         u.From.Hex(),
+			"to":           u.To.Hex(),
+			"dapp":         u.Dapp.Hex(),
+			"control":      u.Control.Hex(),
+			"callConfig":   big.NewInt(int64(u.CallConfig)),
 			"dappGasLimit": big.NewInt(int64(u.DappGasLimit)),
-			"sessionKey": u.SessionKey.Hex(),
+			"sessionKey":   u.SessionKey.Hex(),
 		}
 	}
 

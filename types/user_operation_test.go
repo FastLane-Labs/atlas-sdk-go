@@ -26,10 +26,21 @@ func generateUserOperation() *UserOperationLegacy {
 }
 
 func generateUserOperationV15() *UserOperationV15 {
-	legacyOp := generateUserOperation()
 	return &UserOperationV15{
-		UserOperationLegacy: *legacyOp,
-		DappGasLimit:        600_000,
+		From:         common.HexToAddress("0x1"),
+		To:           common.HexToAddress("0x2"),
+		Deadline:     big.NewInt(100),
+		Gas:          big.NewInt(200),
+		Nonce:        big.NewInt(300),
+		MaxFeePerGas: big.NewInt(400),
+		Value:        big.NewInt(500),
+		Dapp:         common.HexToAddress("0x3"),
+		Control:      common.HexToAddress("0x4"),
+		CallConfig:   600,
+		DappGasLimit: 600_000,
+		SessionKey:   common.HexToAddress("0x5"),
+		Data:         []byte("data"),
+		Signature:    []byte("signature"),
 	}
 }
 

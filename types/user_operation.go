@@ -90,21 +90,20 @@ func (u *UserOperationRaw) Decode() UserOperation {
 
 	if u.DappGasLimit != nil {
 		return &UserOperationV15{
-			UserOperationLegacy: UserOperationLegacy{
-				From:         u.From,
-				To:           u.To,
-				Value:        u.Value.ToInt(),
-				Gas:          u.Gas.ToInt(),
-				MaxFeePerGas: u.MaxFeePerGas.ToInt(),
-				Nonce:        u.Nonce.ToInt(),
-				Deadline:     u.Deadline.ToInt(),
-				Dapp:         u.Dapp,
-				Control:      u.Control,
-				CallConfig:   uint32(u.CallConfig.ToInt().Uint64()),
-				SessionKey:   u.SessionKey,
-				Data:         u.Data,
-			},
+			From:         u.From,
+			To:           u.To,
+			Value:        u.Value.ToInt(),
+			Gas:          u.Gas.ToInt(),
+			MaxFeePerGas: u.MaxFeePerGas.ToInt(),
+			Nonce:        u.Nonce.ToInt(),
+			Deadline:     u.Deadline.ToInt(),
+			Dapp:         u.Dapp,
+			Control:      u.Control,
+			CallConfig:   uint32(u.CallConfig.ToInt().Uint64()),
 			DappGasLimit: uint32(u.DappGasLimit.ToInt().Uint64()),
+			SessionKey:   u.SessionKey,
+			Data:         u.Data,
+			Signature:    u.Signature,
 		}
 	} else {
 		return &UserOperationLegacy{
