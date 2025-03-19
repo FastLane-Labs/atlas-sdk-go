@@ -105,7 +105,7 @@ func (u *UserOperationV15) toTypedDataTypes(trusted bool) apitypes.Types {
 			{Name: "dapp", Type: "address"},
 			{Name: "control", Type: "address"},
 			{Name: "callConfig", Type: "uint32"},
-			//{Name: "dappGasLimit", Type: "uint32"},
+			{Name: "dappGasLimit", Type: "uint32"},
 			{Name: "sessionKey", Type: "address"},
 		}
 	} else {
@@ -120,7 +120,7 @@ func (u *UserOperationV15) toTypedDataTypes(trusted bool) apitypes.Types {
 			{Name: "dapp", Type: "address"},
 			{Name: "control", Type: "address"},
 			{Name: "callConfig", Type: "uint32"},
-			//{Name: "dappGasLimit", Type: "uint32"},
+			{Name: "dappGasLimit", Type: "uint32"},
 			{Name: "sessionKey", Type: "address"},
 			{Name: "data", Type: "bytes"},
 		}
@@ -161,7 +161,7 @@ func (u *UserOperationV15) toTypedDataMessage(trusted bool) apitypes.TypedDataMe
 			"dapp":         u.Dapp.Hex(),
 			"control":      u.Control.Hex(),
 			"callConfig":   big.NewInt(int64(u.CallConfig)),
-			//"dappGasLimit": big.NewInt(int64(u.DappGasLimit)),
+			"dappGasLimit": big.NewInt(int64(u.DappGasLimit)),
 			"sessionKey":   u.SessionKey.Hex(),
 		}
 	}
@@ -177,7 +177,7 @@ func (u *UserOperationV15) toTypedDataMessage(trusted bool) apitypes.TypedDataMe
 		"dapp":         u.Dapp.Hex(),
 		"control":      u.Control.Hex(),
 		"callConfig":   big.NewInt(int64(u.CallConfig)),
-		//"dappGasLimit": big.NewInt(int64(u.DappGasLimit)),
+		"dappGasLimit": big.NewInt(int64(u.DappGasLimit)),
 		"sessionKey":   u.SessionKey.Hex(),
 		"data":         u.Data,
 	}
