@@ -144,7 +144,7 @@ type UserOperationPartialRaw struct {
 }
 
 func NewUserOperationPartialRaw(chainId uint64, version *string, userOp UserOperation, hints []common.Address) (*UserOperationPartialRaw, error) {
-	userOpHash, err := userOp.Hash(utils.FlagTrustedOpHash(userOp.GetCallConfig()), chainId, version)
+	userOpHash, err := userOp.Hash(utils.FlagTrustedOpHash(userOp.GetCallConfig(), version), chainId, version)
 	if err != nil {
 		return nil, err
 	}

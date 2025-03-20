@@ -281,7 +281,7 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 	ctx, cancel := NewContextWithNetworkDeadline()
 	defer cancel()
 
-	if !utils.FlagExPostBids(userOp.GetCallConfig()) || !allowTracing {
+	if !utils.FlagExPostBids(userOp.GetCallConfig(), version) || !allowTracing {
 		bData, err = ethClient.CallContract(ctx, callMsg, nil)
 		if err != nil {
 			return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to call %s: %w", simSolverCallFunction, err)}
@@ -326,7 +326,7 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		}
 	}
 
-	if !utils.FlagExPostBids(userOp.GetCallConfig()) {
+	if !utils.FlagExPostBids(userOp.GetCallConfig(), version) {
 		// If ex post bids are not enabled, we can directly return the bid amount
 		return solverOp.BidAmount, nil
 	}
@@ -340,7 +340,7 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 }
 
 func generateDappOperationForSimulator(chainId uint64, version *string, userOp types.UserOperation, solverOp *types.SolverOperation) (*types.DAppOperation, error) {
-	userOpHash, err := userOp.Hash(utils.FlagTrustedOpHash(userOp.GetCallConfig()), chainId, version)
+	userOpHash, err := userOp.Hash(utils.FlagTrustedOpHash(userOp.GetCallConfig(), version), chainId, version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash userOp: %w", err)
 	}
@@ -357,7 +357,7 @@ func generateDappOperationForSimulator(chainId uint64, version *string, userOp t
 		Signature:     []byte(""),
 	}
 
-	if utils.FlagVerifyCallChainHash(userOp.GetCallConfig()) {
+	if utils.FlagVerifyCallChainHash(userOp.GetCallConfig(), version) {
 		callChainHash, err := CallChainHash(userOp, []*types.SolverOperation{solverOp})
 		if err != nil {
 			return nil, fmt.Errorf("failed to calculate callChainHash: %w", err)
