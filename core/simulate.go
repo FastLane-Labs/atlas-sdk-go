@@ -16,7 +16,7 @@ import (
 const (
 	simUserOperationFunction         = "simUserOperation"
 	simSolverCallFunction            = "simSolverCall"
-	minGasBuffer                     = uint64(1_500_000)
+	minGasBuffer                     = uint64(2_500_000)
 	estimateMetacallGasLimitFunction = "estimateMetacallGasLimit"
 )
 

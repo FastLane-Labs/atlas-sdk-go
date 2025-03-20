@@ -25,25 +25,6 @@ func generateUserOperation() *UserOperationLegacy {
 	}
 }
 
-// func generateUserOperationV15() *UserOperationV15 {
-// 	return &UserOperationV15{
-// 		From:         common.HexToAddress("0x1"),
-// 		To:           common.HexToAddress("0x2"),
-// 		Deadline:     big.NewInt(100),
-// 		Gas:          big.NewInt(200),
-// 		Nonce:        big.NewInt(300),
-// 		MaxFeePerGas: big.NewInt(400),
-// 		Value:        big.NewInt(500),
-// 		Dapp:         common.HexToAddress("0x3"),
-// 		Control:      common.HexToAddress("0x4"),
-// 		CallConfig:   600,
-// 		DappGasLimit: 600_000,
-// 		SessionKey:   common.HexToAddress("0x5"),
-// 		Data:         []byte("data"),
-// 		Signature:    []byte("signature"),
-// 	}
-// }
-
 func TestUserOperationHashDefault(t *testing.T) {
 	t.Parallel()
 
@@ -103,38 +84,6 @@ func TestUserOperationValidateSignature(t *testing.T) {
 		t.Errorf("DAppOperation.checkSignature() error = %v", err)
 	}
 }
-
-// func TestUserOperationV15HashDefault(t *testing.T) {
-// 	t.Parallel()
-
-// 	userOp := generateUserOperationV15()
-// 	want := common.HexToHash("0xbe49dd84d9a2d5713920fa3884a0c52ee40eab8e33b7547f8d4e206ad77d7ce2")
-
-// 	result, err := userOp.Hash(false, 0, nil)
-// 	if err != nil {
-// 		t.Errorf("UserOperation.Hash() error = %v", err)
-// 	}
-
-// 	if result != want {
-// 		t.Errorf("UserOperation.Hash() = %v, want %v", result, want)
-// 	}
-// }
-
-// func TestUserOperationV15HashTrusted(t *testing.T) {
-// 	t.Parallel()
-
-// 	userOp := generateUserOperationV15()
-// 	want := common.HexToHash("0x006f92454adbab861e749a27a6e84b65b33f7293ff3ced2b1e48c0eb15647e8e")
-
-// 	result, err := userOp.Hash(true, 0, nil)
-// 	if err != nil {
-// 		t.Errorf("UserOperation.Hash() error = %v", err)
-// 	}
-
-// 	if result != want {
-// 		t.Errorf("UserOperation.Hash() = %v, want %v", result, want)
-// 	}
-// }
 
 func TestUserOperationV15UserOpHash(t *testing.T) {
 	t.Parallel()
