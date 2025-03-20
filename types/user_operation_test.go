@@ -2,6 +2,7 @@ package types
 
 import (
 	"math/big"
+	"reflect"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -82,5 +83,84 @@ func TestUserOperationValidateSignature(t *testing.T) {
 
 	if err := userOp.ValidateSignature(0, nil); err != nil {
 		t.Errorf("DAppOperation.checkSignature() error = %v", err)
+	}
+}
+
+func TestNewUserOperationPartialRawWithHints(t *testing.T) {
+	t.Parallel()
+
+	userOp := generateUserOperation()
+	hints := map[string]interface{}{
+		"single": []string{"a"},                     // shouldn't be shuffled
+		"empty":  []int{},                           // shouldn't be shuffled
+		"multi":  []string{"a", "b", "c", "d", "e"}, // should be shuffled
+		"nums":   []int{1, 2, 3, 4, 5},              // should be shuffled
+		"addresses": []common.Address{
+			common.HexToAddress("0x1"),
+			common.HexToAddress("0x2"),
+			common.HexToAddress("0x3"),
+			common.HexToAddress("0x4"),
+			common.HexToAddress("0x5"),
+		}, // should be shuffled
+		"bigints": []*big.Int{
+			big.NewInt(1),
+			big.NewInt(2),
+			big.NewInt(3),
+			big.NewInt(4),
+			big.NewInt(5),
+		}, // should be shuffled
+		"static": "not-a-slice", // shouldn't be touched
+	}
+
+	// Create a copy of original slices for comparison
+	originalMulti := make([]string, len(hints["multi"].([]string)))
+	copy(originalMulti, hints["multi"].([]string))
+	originalNums := make([]int, len(hints["nums"].([]int)))
+	copy(originalNums, hints["nums"].([]int))
+	originalAddresses := make([]common.Address, len(hints["addresses"].([]common.Address)))
+	copy(originalAddresses, hints["addresses"].([]common.Address))
+	originalBigints := make([]*big.Int, len(hints["bigints"].([]*big.Int)))
+	copy(originalBigints, hints["bigints"].([]*big.Int))
+
+	// Run multiple times to ensure we get different orders
+	shuffledAtLeastOnce := false
+	for i := 0; i < 10; i++ {
+		result, err := NewUserOperationPartialRaw(0, nil, userOp, hints)
+		if err != nil {
+			t.Fatalf("NewUserOperationPartialRaw() error = %v", err)
+		}
+
+		// Verify single element slice remains unchanged
+		if !reflect.DeepEqual(result.Hints["single"], []string{"a"}) {
+			t.Error("single element slice was modified")
+		}
+
+		// Verify empty slice remains unchanged
+		if !reflect.DeepEqual(result.Hints["empty"], []int{}) {
+			t.Error("empty slice was modified")
+		}
+
+		// Verify non-slice value remains unchanged
+		if result.Hints["static"] != "not-a-slice" {
+			t.Error("non-slice value was modified")
+		}
+
+		// Check if multi-element slices were shuffled
+		if !reflect.DeepEqual(result.Hints["multi"], originalMulti) {
+			shuffledAtLeastOnce = true
+		}
+		if !reflect.DeepEqual(result.Hints["nums"], originalNums) {
+			shuffledAtLeastOnce = true
+		}
+		if !reflect.DeepEqual(result.Hints["addresses"], originalAddresses) {
+			shuffledAtLeastOnce = true
+		}
+		if !reflect.DeepEqual(result.Hints["bigints"], originalBigints) {
+			shuffledAtLeastOnce = true
+		}
+	}
+
+	if !shuffledAtLeastOnce {
+		t.Error("multi-element slices were never shuffled after 10 attempts")
 	}
 }
