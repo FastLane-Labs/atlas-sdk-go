@@ -29,9 +29,26 @@ var (
 		{Name: "signature", Type: "bytes", InternalType: "bytes"},
 	}
 
-	userOpSolType, _    = abi.NewType("tuple", "struct UserOperation", abiFields)
-	userOpSolTypeV15, _ = abi.NewType("tuple", "struct UserOperation", append(abiFields, abi.ArgumentMarshaling{Name: "dappGasLimit", Type: "uint32", InternalType: "uint32"}))
+	abiFieldsV15 = []abi.ArgumentMarshaling{
+		{Name: "from", Type: "address", InternalType: "address"},
+		{Name: "to", Type: "address", InternalType: "address"},
+		{Name: "value", Type: "uint256", InternalType: "uint256"},
+		{Name: "gas", Type: "uint256", InternalType: "uint256"},
+		{Name: "maxFeePerGas", Type: "uint256", InternalType: "uint256"},
+		{Name: "nonce", Type: "uint256", InternalType: "uint256"},
+		{Name: "deadline", Type: "uint256", InternalType: "uint256"},
+		{Name: "dapp", Type: "address", InternalType: "address"},
+		{Name: "control", Type: "address", InternalType: "address"},
+		{Name: "callConfig", Type: "uint32", InternalType: "uint32"},
+		{Name: "dappGasLimit", Type: "uint32", InternalType: "uint32"},
+		{Name: "sessionKey", Type: "address", InternalType: "address"},
+		{Name: "data", Type: "bytes", InternalType: "bytes"},
+		{Name: "signature", Type: "bytes", InternalType: "bytes"},
+	}
 
+	userOpSolType, _ = abi.NewType("tuple", "struct UserOperation", abiFields)
+	userOpSolTypeV15, _ = abi.NewType("tuple", "struct UserOperation", abiFieldsV15)
+	
 	userOpArgs = abi.Arguments{
 		{Type: userOpSolType, Name: "userOperation"},
 	}
