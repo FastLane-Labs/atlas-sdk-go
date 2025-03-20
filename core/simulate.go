@@ -368,7 +368,7 @@ func generateDappOperationForSimulator(chainId uint64, version *string, userOp t
 	return dAppOp, nil
 }
 
-func (sdk *AtlasSdk) EstimateMetacallGasLimit(chainId uint64, version *string, userOp types.UserOperation, solverOps []*types.SolverOperation) (uint64, error) {
+func (sdk *AtlasSdk) EstimateMetacallGasLimit(chainId uint64, version *string, userOp types.UserOperation, solverOps []types.SolverOperation) (uint64, error) {
 	minVersion := config.AtlasV_1_5
 	if minSupport, err := config.IsVersionAtLeast(version, &minVersion); err != nil || !minSupport {
 		return 0, fmt.Errorf("metacall gas limit estimation is only supported for Atlas v1.5 and above")
