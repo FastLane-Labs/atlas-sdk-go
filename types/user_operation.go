@@ -3,6 +3,7 @@ package types
 import (
 	"math/big"
 	"math/rand/v2"
+	"reflect"
 
 	"github.com/FastLane-Labs/atlas-sdk-go/utils"
 	"github.com/ethereum/go-ethereum/common"
@@ -136,14 +137,14 @@ type UserOperationPartialRaw struct {
 	Control      common.Address `json:"control"`
 
 	//Exactly one of 1. Hints  2. (Value, Data, From) must be set
-	Hints []common.Address `json:"hints,omitempty"`
+	Hints map[string]interface{} `json:"hints,omitempty"`
 
 	Value *hexutil.Big   `json:"value,omitempty"`
 	Data  hexutil.Bytes  `json:"data,omitempty"`
 	From  common.Address `json:"from,omitempty"`
 }
 
-func NewUserOperationPartialRaw(chainId uint64, version *string, userOp UserOperation, hints []common.Address) (*UserOperationPartialRaw, error) {
+func NewUserOperationPartialRaw(chainId uint64, version *string, userOp UserOperation, hints map[string]interface{}) (*UserOperationPartialRaw, error) {
 	userOpHash, err := userOp.Hash(utils.FlagTrustedOpHash(userOp.GetCallConfig(), version), chainId, version)
 	if err != nil {
 		return nil, err
@@ -161,8 +162,14 @@ func NewUserOperationPartialRaw(chainId uint64, version *string, userOp UserOper
 	}
 
 	if len(hints) > 0 {
-		//randomize hints
-		rand.Shuffle(len(hints), func(i, j int) { hints[i], hints[j] = hints[j], hints[i] })
+		// Randomize slices/arrays
+		for key, hint := range hints {
+			v := reflect.ValueOf(hint)
+			if v.Kind() == reflect.Slice || v.Kind() == reflect.Array {
+				randomizeSlice(v)
+				hints[key] = v.Interface()
+			}
+		}
 		userOpPartial.Hints = hints
 	} else {
 		userOpPartial.Data = hexutil.Bytes(userOp.GetData())
@@ -174,12 +181,12 @@ func NewUserOperationPartialRaw(chainId uint64, version *string, userOp UserOper
 }
 
 type UserOperationWithHintsRaw struct {
-	ChainId       *hexutil.Big      `json:"chainId"`
-	UserOperation *UserOperationRaw `json:"userOperation"`
-	Hints         []common.Address  `json:"hints"`
+	ChainId       *hexutil.Big           `json:"chainId"`
+	UserOperation *UserOperationRaw      `json:"userOperation"`
+	Hints         map[string]interface{} `json:"hints"`
 }
 
-func NewUserOperationWithHintsRaw(chainId uint64, userOp UserOperation, hints []common.Address) *UserOperationWithHintsRaw {
+func NewUserOperationWithHintsRaw(chainId uint64, userOp UserOperation, hints map[string]interface{}) *UserOperationWithHintsRaw {
 	return &UserOperationWithHintsRaw{
 		ChainId:       (*hexutil.Big)(big.NewInt(int64(chainId))),
 		UserOperation: userOp.EncodeToRaw(),
@@ -187,6 +194,18 @@ func NewUserOperationWithHintsRaw(chainId uint64, userOp UserOperation, hints []
 	}
 }
 
-func (uop *UserOperationWithHintsRaw) Decode() (uint64, UserOperation, []common.Address) {
+func (uop *UserOperationWithHintsRaw) Decode() (uint64, UserOperation, map[string]interface{}) {
 	return uop.ChainId.ToInt().Uint64(), uop.UserOperation.Decode(), uop.Hints
+}
+
+func randomizeSlice(v reflect.Value) {
+	if v.Len() > 1 {
+		rand.Shuffle(v.Len(), func(i, j int) {
+			vi, vj := v.Index(i), v.Index(j)
+			tmp := reflect.New(vi.Type()).Elem()
+			tmp.Set(vi)
+			vi.Set(vj)
+			vj.Set(tmp)
+		})
+	}
 }
