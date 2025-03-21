@@ -13,7 +13,7 @@ const (
 	metacallFunction = "metacall"
 )
 
-func (sdk *AtlasSdk) Metacall(chainId uint64, version *string, transactOpts *bind.TransactOpts, userOp *types.UserOperation, solverOps types.SolverOperations, dAppOp *types.DAppOperation, gasRefundBeneficiary *common.Address) (*gethTypes.Transaction, error) {
+func (sdk *AtlasSdk) Metacall(chainId uint64, version *string, transactOpts *bind.TransactOpts, userOp types.UserOperation, solverOps types.SolverOperations, dAppOp *types.DAppOperation, gasRefundBeneficiary *common.Address) (*gethTypes.Transaction, error) {
 	ethClient, err := sdk.getEthClient(chainId)
 	if err != nil {
 		return nil, err

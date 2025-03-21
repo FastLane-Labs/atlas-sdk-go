@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"slices"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -29,7 +30,8 @@ const (
 	AtlasV_1_1   = "1.1"
 	AtlasV_1_2   = "1.2"
 	AtlasV_1_3   = "1.3"
-	AtlasVLatest = AtlasV_1_3
+	AtlasV_1_5   = "1.5"
+	AtlasVLatest = AtlasV_1_5
 )
 
 var (
@@ -38,8 +40,34 @@ var (
 	initOnce           sync.Once
 	mu                 sync.RWMutex
 
-	allVersions = []string{AtlasV_1_0, AtlasV_1_1, AtlasV_1_2, AtlasV_1_3}
+	allVersions = []string{AtlasV_1_0, AtlasV_1_1, AtlasV_1_2, AtlasV_1_3, AtlasV_1_5}
 )
+
+func IsVersionAtLeast(version *string, minVersion *string) (bool, error) {
+	if version == nil || minVersion == nil {
+		return false, errors.New("version or minVersion is nil")
+	}
+
+	idx1 := slices.Index(allVersions, *version)
+	if idx1 == -1 {
+		return false, fmt.Errorf("version not found in allVersions")
+	}
+
+	idx2 := slices.Index(allVersions, *minVersion)
+	if idx2 == -1 {
+		return false, fmt.Errorf("minVersion not found in allVersions")
+	}
+
+	return idx1 >= idx2, nil
+}
+
+func IsVersionLatest(version *string) (bool, error) {
+	if version == nil {
+		return false, fmt.Errorf("version is nil")
+	}
+
+	return *version == AtlasVLatest, nil
+}
 
 func InitChainConfig() error {
 	var initErr error

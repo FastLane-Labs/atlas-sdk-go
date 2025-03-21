@@ -26,7 +26,7 @@ func (b *BundleRaw) Decode() *Bundle {
 // Internal representation of a bundle
 type Bundle struct {
 	ChainId          uint64
-	UserOperation    *UserOperation
+	UserOperation    UserOperation
 	SolverOperations SolverOperations
 	DAppOperation    *DAppOperation
 }
