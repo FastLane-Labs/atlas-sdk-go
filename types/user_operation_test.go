@@ -7,8 +7,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func generateUserOperation() *UserOperation {
-	return &UserOperation{
+func generateUserOperation() *UserOperationLegacy {
+	return &UserOperationLegacy{
 		From:         common.HexToAddress("0x1"),
 		To:           common.HexToAddress("0x2"),
 		Deadline:     big.NewInt(100),
@@ -82,5 +82,37 @@ func TestUserOperationValidateSignature(t *testing.T) {
 
 	if err := userOp.ValidateSignature(0, nil); err != nil {
 		t.Errorf("DAppOperation.checkSignature() error = %v", err)
+	}
+}
+
+func TestUserOperationV15UserOpHash(t *testing.T) {
+	t.Parallel()
+
+	userOp := UserOperationV15{
+		From:         common.HexToAddress("0xfc8b8974fc3adb8281a6c4c38d7cc895769a8568"),
+		To:           common.HexToAddress("0x5f4f2a8961ef043817100e512286ff5096ae0042"),
+		Value:        big.NewInt(0),
+		Gas:          big.NewInt(20000),
+		MaxFeePerGas: big.NewInt(5000000),
+		Nonce:        big.NewInt(1),
+		Deadline:     big.NewInt(27771705),
+		Dapp:         common.HexToAddress("0x0e3009d01e85ac49d164e453ec81283eaaf46fb5"),
+		Control:      common.HexToAddress("0x0e3009d01e85ac49d164e453ec81283eaaf46fb5"),
+		CallConfig:   532548,
+		DappGasLimit: 2000000,
+		SessionKey:   common.HexToAddress("0x30d995248f48f101d18b21ece539fb862d7b4487"),
+		Data:         []byte("0x1ad6fbc3"),
+		Signature:    common.FromHex("0x85a2bc106a41bfb5055d62c8afe7f649af5fcea06c40e4964e0f08eb85d805eb1ebd0be19740aa7841c5084e03ab03554fa9aa46aa315efff266d72b805178191c"),
+	}
+
+	want := common.HexToHash("0xa560ebeaa0ea1144e7ef00f5f31d4f7a87eafa1da0a2b5f747bd8ee759e1fca5")
+
+	result, err := userOp.Hash(true, 0, nil)
+	if err != nil {
+		t.Errorf("UserOperation.Hash() error = %v", err)
+	}
+
+	if result != want {
+		t.Errorf("UserOperation.Hash() = %v, want %v", result, want)
 	}
 }
