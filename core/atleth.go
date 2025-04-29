@@ -12,7 +12,8 @@ import (
 )
 
 const (
-	balanceOfBondedFunction = "balanceOfBonded"
+	balanceOfBondedFunctionAtlEth = "balanceOfBonded"
+	balanceOfBondedFunctionShMon  = "balanceOfBonded0"
 )
 
 // Returns bonded shMonad for Monad chains
@@ -25,6 +26,7 @@ func (sdk *AtlasSdk) GetBalanceOfBondedAtlEth(chainId uint64, version *string, a
 	var (
 		_abi        *abi.ABI
 		destination common.Address
+		function    string
 		args        []interface{}
 	)
 
@@ -42,6 +44,7 @@ func (sdk *AtlasSdk) GetBalanceOfBondedAtlEth(chainId uint64, version *string, a
 		}
 
 		_abi = shMonadAbi
+		function = balanceOfBondedFunctionShMon
 		destination = monadConfig.ShMonad
 		args = []interface{}{monadConfig.PolicyId, account}
 	} else {
@@ -56,13 +59,14 @@ func (sdk *AtlasSdk) GetBalanceOfBondedAtlEth(chainId uint64, version *string, a
 		}
 
 		_abi = atlasAbi
+		function = balanceOfBondedFunctionAtlEth
 		destination = atlasAddr
 		args = []interface{}{account}
 	}
 
-	pData, err := _abi.Pack(balanceOfBondedFunction, args...)
+	pData, err := _abi.Pack(function, args...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to pack %s: %w", balanceOfBondedFunction, err)
+		return nil, fmt.Errorf("failed to pack %s: %w", function, err)
 	}
 
 	ctx, cancel := NewContextWithNetworkDeadline()
@@ -77,17 +81,17 @@ func (sdk *AtlasSdk) GetBalanceOfBondedAtlEth(chainId uint64, version *string, a
 		nil,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to call %s: %w", balanceOfBondedFunction, err)
+		return nil, fmt.Errorf("failed to call %s: %w", function, err)
 	}
 
-	_balanceOfBonded, err := _abi.Unpack(balanceOfBondedFunction, bData)
+	_balanceOfBonded, err := _abi.Unpack(function, bData)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unpack %s: %w", balanceOfBondedFunction, err)
+		return nil, fmt.Errorf("failed to unpack %s: %w", function, err)
 	}
 
 	balanceOfBonded, ok := _balanceOfBonded[0].(*big.Int)
 	if !ok {
-		return nil, fmt.Errorf("failed to cast %s: %w", balanceOfBondedFunction, err)
+		return nil, fmt.Errorf("failed to cast %s: %w", function, err)
 	}
 
 	return balanceOfBonded, nil
