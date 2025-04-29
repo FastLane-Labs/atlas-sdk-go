@@ -17,6 +17,7 @@ const (
 	simUserOperationFunction         = "simUserOperation"
 	simSolverCallFunction            = "simSolverCall"
 	minGasBuffer                     = uint64(2_500_000)
+	simGasSuggestedBuffer            = uint64(30_000)
 	estimateMetacallGasLimitFunction = "estimateMetacallGasLimit"
 )
 
@@ -117,12 +118,13 @@ func (e *UserOperationSimulationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"simUserOperation failed with result %d (%s) and validCallsResult %d (%s) and pData %s",
+		"simUserOperation failed with result %d (%s) and validCallsResult %d (%s) and pData %s. error: %s",
 		e.Result,
 		e.ResultString(),
 		e.ValidCallsResult,
 		e.ValidCallsResultString(),
 		e.Data,
+		e.err.Error(),
 	)
 }
 
@@ -151,12 +153,13 @@ func (e *SolverOperationSimulationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"simSolverCall failed with result %d (%s) and outcome %d (%s) and pData %s",
+		"simSolverCall failed with result %d (%s) and outcome %d (%s) and pData %s. error: %s",
 		e.Result,
 		e.ResultString(),
 		e.SolverOutcome,
 		e.SolverOutcomeString(),
 		e.Data,
+		e.err.Error(),
 	)
 }
 
@@ -255,15 +258,36 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		gasPrice.Set(solverOp.MaxFeePerGas)
 	}
 
-	gasBuffer := minGasBuffer
+	var (
+		gasLimit   uint64
+		minVersion = config.AtlasV_1_5
+	)
 
-	solverGasLimit, err := sdk.GetDAppSolverGasLimit(chainId, userOp.GetControl())
+	lte_1_5, err := config.IsVersionAtLeast(version, &minVersion)
 	if err != nil {
-		return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to get solver gas limit: %w", err)}
+		return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to check version: %w", err)}
 	}
 
-	if solverGasLimit.Uint64() > gasBuffer {
-		gasBuffer = solverGasLimit.Uint64()
+	if lte_1_5 {
+		_gasLimit, err := sdk.EstimateMetacallGasLimit(chainId, version, userOp, []types.SolverOperation{*solverOp})
+		if err != nil {
+			return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to estimate metacall gas limit: %w", err)}
+		}
+
+		gasLimit = _gasLimit + simGasSuggestedBuffer
+	} else {
+		gasBuffer := minGasBuffer
+
+		solverGasLimit, err := sdk.GetDAppSolverGasLimit(chainId, userOp.GetControl())
+		if err != nil {
+			return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to get solver gas limit: %w", err)}
+		}
+
+		if solverGasLimit.Uint64() > gasBuffer {
+			gasBuffer = solverGasLimit.Uint64()
+		}
+
+		gasLimit = userOp.GetGas().Uint64() + solverOp.Gas.Uint64() + gasBuffer
 	}
 
 	var (
@@ -271,7 +295,7 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		traceResult callFrame
 		callMsg     = ethereum.CallMsg{
 			To:        &simulatorAddr,
-			Gas:       userOp.GetGas().Uint64() + solverOp.Gas.Uint64() + gasBuffer,
+			Gas:       gasLimit,
 			GasFeeCap: gasPrice,
 			Value:     new(big.Int).Set(userOp.GetValue()),
 			Data:      pData,
