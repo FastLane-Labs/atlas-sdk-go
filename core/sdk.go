@@ -19,6 +19,8 @@ type AtlasSdk struct {
 	userLastNonSequentialNonce map[uint64]map[string]map[common.Address]*big.Int
 	noncesMu                   map[uint64]map[string]*sync.Mutex
 
+	monadConfig map[uint64]map[string]*MonadConfig
+
 	mu sync.Mutex
 }
 
@@ -39,6 +41,7 @@ func NewAtlasSdk(rpcClients []interface{}, chainOverrides map[uint64]map[string]
 		ethClient:                  make(map[uint64]eth.IEthClient),
 		userLastNonSequentialNonce: make(map[uint64]map[string]map[common.Address]*big.Int),
 		noncesMu:                   make(map[uint64]map[string]*sync.Mutex),
+		monadConfig:                make(map[uint64]map[string]*MonadConfig),
 	}
 
 	for _, rpcClient := range rpcClients {
@@ -80,6 +83,21 @@ func NewAtlasSdk(rpcClients []interface{}, chainOverrides map[uint64]map[string]
 			}
 
 			sdk.noncesMu[chainIdUint64][version] = &sync.Mutex{}
+		}
+
+		if config.IsMonad(chainIdUint64) {
+			for _, version := range config.GetAllMonadVersions() {
+				monadConfig, err := sdk.LoadMonadConfig(chainIdUint64, &version)
+				if err != nil {
+					return nil, err
+				}
+
+				if sdk.monadConfig[chainIdUint64] == nil {
+					sdk.monadConfig[chainIdUint64] = make(map[string]*MonadConfig)
+				}
+
+				sdk.monadConfig[chainIdUint64][version] = monadConfig
+			}
 		}
 	}
 
