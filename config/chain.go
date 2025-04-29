@@ -164,6 +164,10 @@ func GetChainConfig(chainId uint64, version *string) (*ChainConfig, error) {
 
 	v := GetVersion(version)
 
+	if IsMonad(chainId) {
+		v = ToMonadVersion(&v)
+	}
+
 	mu.RLock()
 	defer mu.RUnlock()
 
