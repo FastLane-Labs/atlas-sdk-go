@@ -118,13 +118,12 @@ func (e *UserOperationSimulationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"simUserOperation failed with result %d (%s) and validCallsResult %d (%s) and pData %s. error: %s",
+		"simUserOperation failed with result %d (%s) and validCallsResult %d (%s) and pData %s",
 		e.Result,
 		e.ResultString(),
 		e.ValidCallsResult,
 		e.ValidCallsResultString(),
 		e.Data,
-		e.err.Error(),
 	)
 }
 
@@ -153,13 +152,12 @@ func (e *SolverOperationSimulationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"simSolverCall failed with result %d (%s) and outcome %d (%s) and pData %s. error: %s",
+		"simSolverCall failed with result %d (%s) and outcome %d (%s) and pData %s",
 		e.Result,
 		e.ResultString(),
 		e.SolverOutcome,
 		e.SolverOutcomeString(),
 		e.Data,
-		e.err.Error(),
 	)
 }
 
@@ -202,7 +200,7 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 			"failed to call %s: %w, simulatorAddr %s, pData %s, version %s, userOp %s",
 			simUserOperationFunction,
 			err,
-			simulatorAddr,
+			simulatorAddr.Hex(),
 			hex.EncodeToString(pData),
 			*version,
 			userOp.EncodeToRaw(),
