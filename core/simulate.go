@@ -208,6 +208,8 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 		gasLimit = userOp.GetGas().Uint64() + minGasBuffer
 	}
 
+	gasPrice := new(big.Int).Set(userOp.GetMaxFeePerGas())
+
 	ctx, cancel := NewContextWithNetworkDeadline()
 	defer cancel()
 
@@ -216,7 +218,7 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 		ethereum.CallMsg{
 			To:        &simulatorAddr,
 			Gas:       gasLimit,
-			GasFeeCap: new(big.Int).Set(userOp.GetMaxFeePerGas()),
+			GasFeeCap: gasPrice,
 			Value:     new(big.Int).Set(userOp.GetValue()),
 			Data:      pData,
 		},
@@ -245,7 +247,7 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 		return &UserOperationSimulationError{
 			Result:           result,
 			ValidCallsResult: uint8(validCallResult.Uint64()),
-			Data:             hex.EncodeToString(pData) + fmt.Sprintf(", gasLimit %d", gasLimit),
+			Data:             hex.EncodeToString(pData) + fmt.Sprintf(", gasLimit %d, gasPrice %s, rawReturnData %s", gasLimit, gasPrice.String(), hex.EncodeToString(bData)),
 		}
 	}
 
@@ -376,7 +378,7 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		return nil, &SolverOperationSimulationError{
 			Result:        result,
 			SolverOutcome: solverOutcomeResult.Uint64(),
-			Data:          hex.EncodeToString(pData) + fmt.Sprintf(", gasLimit %d", gasLimit),
+			Data:          hex.EncodeToString(pData) + fmt.Sprintf(", gasLimit %d, gasPrice %s, rawReturnData %s", gasLimit, gasPrice.String(), hex.EncodeToString(bData)),
 		}
 	}
 
