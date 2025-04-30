@@ -17,7 +17,7 @@ const (
 	simUserOperationFunction         = "simUserOperation"
 	simSolverCallFunction            = "simSolverCall"
 	minGasBuffer                     = uint64(2_500_000)
-	simGasSuggestedBuffer            = uint64(30_000)
+	simGasSuggestedBuffer            = uint64(40_000)
 	estimateMetacallGasLimitFunction = "estimateMetacallGasLimit"
 )
 
@@ -197,7 +197,7 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 		return &UserOperationSimulationError{err: fmt.Errorf("failed to check version: %w", err)}
 	}
 
-	if lte_1_5 && false {
+	if lte_1_5 {
 		_gasLimit, err := sdk.EstimateMetacallGasLimit(chainId, &_version, userOp, []types.SolverOperation{})
 		if err != nil {
 			return &UserOperationSimulationError{err: fmt.Errorf("failed to estimate metacall gas limit: %w", err)}
