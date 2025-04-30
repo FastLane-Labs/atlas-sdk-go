@@ -245,7 +245,7 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 		return &UserOperationSimulationError{
 			Result:           result,
 			ValidCallsResult: uint8(validCallResult.Uint64()),
-			Data:             hex.EncodeToString(pData),
+			Data:             hex.EncodeToString(pData) + fmt.Sprintf(", gasLimit %d", gasLimit),
 		}
 	}
 
