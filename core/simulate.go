@@ -223,13 +223,14 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 		nil)
 	if err != nil {
 		return &UserOperationSimulationError{err: fmt.Errorf(
-			"failed to call %s: %w, simulatorAddr %s, pData %s, version %s, userOp %s",
+			"failed to call %s: %w, simulatorAddr %s, pData %s, version %s, userOp %s, gasLimit %d",
 			simUserOperationFunction,
 			err,
 			simulatorAddr.Hex(),
 			hex.EncodeToString(pData),
 			_version,
 			userOp.EncodeToRaw(),
+			gasLimit,
 		)}
 	}
 
