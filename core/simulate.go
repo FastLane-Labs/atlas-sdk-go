@@ -376,7 +376,7 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		return nil, &SolverOperationSimulationError{
 			Result:        result,
 			SolverOutcome: solverOutcomeResult.Uint64(),
-			Data:          hex.EncodeToString(pData),
+			Data:          hex.EncodeToString(pData) + fmt.Sprintf(", gasLimit %d", gasLimit),
 		}
 	}
 
