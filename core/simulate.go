@@ -247,7 +247,7 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 		return &UserOperationSimulationError{
 			Result:           result,
 			ValidCallsResult: uint8(validCallResult.Uint64()),
-			Data:             hex.EncodeToString(pData) + fmt.Sprintf(", simulatorAddr %s, version %s, gasLimit %d, gasPrice %s, rawReturnData %s", simulatorAddr.Hex(), version, gasLimit, gasPrice.String(), hex.EncodeToString(bData)),
+			Data:             hex.EncodeToString(pData) + fmt.Sprintf(", simulatorAddr %s, version %s, gasLimit %d, gasPrice %s, rawReturnData %s", simulatorAddr.Hex(), *version, gasLimit, gasPrice.String(), hex.EncodeToString(bData)),
 		}
 	}
 
@@ -378,7 +378,7 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		return nil, &SolverOperationSimulationError{
 			Result:        result,
 			SolverOutcome: solverOutcomeResult.Uint64(),
-			Data:          hex.EncodeToString(pData) + fmt.Sprintf(", simulatorAddr %s, version %s, gasLimit %d, gasPrice %s, rawReturnData %s", simulatorAddr.Hex(), version, gasLimit, gasPrice.String(), hex.EncodeToString(bData)),
+			Data:          hex.EncodeToString(pData) + fmt.Sprintf(", simulatorAddr %s, version %s, gasLimit %d, gasPrice %s, rawReturnData %s", simulatorAddr.Hex(), *version, gasLimit, gasPrice.String(), hex.EncodeToString(bData)),
 		}
 	}
 
