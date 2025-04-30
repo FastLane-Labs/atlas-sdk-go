@@ -197,7 +197,7 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 		return &UserOperationSimulationError{err: fmt.Errorf("failed to check version: %w", err)}
 	}
 
-	if lte_1_5 {
+	if lte_1_5 && false {
 		_gasLimit, err := sdk.EstimateMetacallGasLimit(chainId, &_version, userOp, []types.SolverOperation{})
 		if err != nil {
 			return &UserOperationSimulationError{err: fmt.Errorf("failed to estimate metacall gas limit: %w", err)}
