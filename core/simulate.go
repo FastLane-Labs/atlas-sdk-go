@@ -192,12 +192,12 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 		minVersion = config.AtlasV_1_5
 	)
 
-	lte_1_5, err := config.IsVersionAtLeast(&_version, &minVersion)
+	gte_1_5, err := config.IsVersionAtLeast(&_version, &minVersion)
 	if err != nil {
 		return &UserOperationSimulationError{err: fmt.Errorf("failed to check version: %w", err)}
 	}
 
-	if lte_1_5 {
+	if gte_1_5 {
 		_gasLimit, err := sdk.EstimateMetacallGasLimit(chainId, &_version, userOp, []types.SolverOperation{})
 		if err != nil {
 			return &UserOperationSimulationError{err: fmt.Errorf("failed to estimate metacall gas limit: %w", err)}
@@ -247,7 +247,7 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 		return &UserOperationSimulationError{
 			Result:           result,
 			ValidCallsResult: uint8(validCallResult.Uint64()),
-			Data:             hex.EncodeToString(pData) + fmt.Sprintf(", simulatorAddr %s, version %s, gasLimit %d, gasPrice %s, rawReturnData %s", simulatorAddr.Hex(), *version, gasLimit, gasPrice.String(), hex.EncodeToString(bData)),
+			Data:             hex.EncodeToString(pData) + fmt.Sprintf(", simulatorAddr %s, version %s, gasLimit %d, gasPrice %s, rawReturnData %s", simulatorAddr.Hex(), _version, gasLimit, gasPrice.String(), hex.EncodeToString(bData)),
 		}
 	}
 
@@ -295,12 +295,12 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		minVersion = config.AtlasV_1_5
 	)
 
-	lte_1_5, err := config.IsVersionAtLeast(&_version, &minVersion)
+	gte_1_5, err := config.IsVersionAtLeast(&_version, &minVersion)
 	if err != nil {
 		return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to check version: %w", err)}
 	}
 
-	if lte_1_5 {
+	if gte_1_5 {
 		_gasLimit, err := sdk.EstimateMetacallGasLimit(chainId, &_version, userOp, []types.SolverOperation{*solverOp})
 		if err != nil {
 			return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to estimate metacall gas limit: %w", err)}
@@ -378,7 +378,7 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		return nil, &SolverOperationSimulationError{
 			Result:        result,
 			SolverOutcome: solverOutcomeResult.Uint64(),
-			Data:          hex.EncodeToString(pData) + fmt.Sprintf(", simulatorAddr %s, version %s, gasLimit %d, gasPrice %s, rawReturnData %s", simulatorAddr.Hex(), *version, gasLimit, gasPrice.String(), hex.EncodeToString(bData)),
+			Data:          hex.EncodeToString(pData) + fmt.Sprintf(", simulatorAddr %s, version %s, gasLimit %d, gasPrice %s, rawReturnData %s", simulatorAddr.Hex(), _version, gasLimit, gasPrice.String(), hex.EncodeToString(bData)),
 		}
 	}
 
