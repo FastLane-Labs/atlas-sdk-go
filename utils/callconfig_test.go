@@ -33,7 +33,7 @@ func TestFlagUserNoncesSequential(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FlagUserNoncesSequential(tt.callConfig, &version); got != tt.want {
+			if got, _ := FlagUserNoncesSequential(tt.callConfig, &version); got != tt.want {
 				t.Errorf("FlagUserNoncesSequential() = %v, want %v", got, tt.want)
 			}
 		})
@@ -69,7 +69,7 @@ func TestFlagDAppNoncesSequential(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FlagDappNoncesSequential(tt.callConfig, &version); got != tt.want {
+			if got, _ := FlagDappNoncesSequential(tt.callConfig, &version); got != tt.want {
 				t.Errorf("FlagDAppNoncesSequential() = %v, want %v", got, tt.want)
 			}
 		})
@@ -105,7 +105,7 @@ func TestFlagRequirePreOps(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FlagRequirePreOps(tt.callConfig, &version); got != tt.want {
+			if got, _ := FlagRequirePreOps(tt.callConfig, &version); got != tt.want {
 				t.Errorf("FlagRequirePreOps() = %v, want %v", got, tt.want)
 			}
 		})
@@ -141,7 +141,7 @@ func TestFlagTrackPreOpsReturnData(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FlagTrackPreOpsReturnData(tt.callConfig, &version); got != tt.want {
+			if got, _ := FlagTrackPreOpsReturnData(tt.callConfig, &version); got != tt.want {
 				t.Errorf("FlagTrackPreOpsReturnData() = %v, want %v", got, tt.want)
 			}
 		})
@@ -177,7 +177,7 @@ func TestFlagTrackUserReturnData(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FlagTrackUserReturnData(tt.callConfig, &version); got != tt.want {
+			if got, _ := FlagTrackUserReturnData(tt.callConfig, &version); got != tt.want {
 				t.Errorf("FlagTrackUserReturnData() = %v, want %v", got, tt.want)
 			}
 		})
@@ -213,7 +213,7 @@ func TestFlagDelegateUser(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FlagDelegateUser(tt.callConfig, &version); got != tt.want {
+			if got, _ := FlagDelegateUser(tt.callConfig, &version); got != tt.want {
 				t.Errorf("FlagDelegateUser() = %v, want %v", got, tt.want)
 			}
 		})
@@ -249,7 +249,7 @@ func TestFlagRequirePreSolver(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FlagRequirePreSolver(tt.callConfig, &version); got != tt.want {
+			if got, _ := FlagRequirePreSolver(tt.callConfig, &version); got != tt.want {
 				t.Errorf("FlagRequirePreSolver() = %v, want %v", got, tt.want)
 			}
 		})
@@ -285,7 +285,7 @@ func TestFlagRequirePostSolver(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FlagRequirePostSolver(tt.callConfig, &version); got != tt.want {
+			if got, _ := FlagRequirePostSolver(tt.callConfig, &version); got != tt.want {
 				t.Errorf("FlagRequirePostSolver() = %v, want %v", got, tt.want)
 			}
 		})
@@ -321,7 +321,7 @@ func TestFlagRequirePostOps(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FlagRequirePostOps(tt.callConfig, &version); got != tt.want {
+			if got, _ := FlagRequirePostOps(tt.callConfig, &version); got != tt.want {
 				t.Errorf("FlagRequirePostOps() = %v, want %v", got, tt.want)
 			}
 		})
@@ -357,7 +357,7 @@ func TestFlagZeroSolvers(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FlagZeroSolvers(tt.callConfig, &version); got != tt.want {
+			if got, _ := FlagZeroSolvers(tt.callConfig, &version); got != tt.want {
 				t.Errorf("FlagZeroSolvers() = %v, want %v", got, tt.want)
 			}
 		})
@@ -393,7 +393,7 @@ func TestFlagReuseUserOp(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FlagReuseUserOp(tt.callConfig, &version); got != tt.want {
+			if got, _ := FlagReuseUserOp(tt.callConfig, &version); got != tt.want {
 				t.Errorf("FlagReuseUserOp() = %v, want %v", got, tt.want)
 			}
 		})
@@ -429,7 +429,7 @@ func TestFlagUserAuctioneer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FlagUserAuctioneer(tt.callConfig, &version); got != tt.want {
+			if got, _ := FlagUserAuctioneer(tt.callConfig, &version); got != tt.want {
 				t.Errorf("FlagUserAuctioneer() = %v, want %v", got, tt.want)
 			}
 		})
@@ -465,7 +465,7 @@ func TestFlagSolverAuctioneer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FlagSolverAuctioneer(tt.callConfig, &version); got != tt.want {
+			if got, _ := FlagSolverAuctioneer(tt.callConfig, &version); got != tt.want {
 				t.Errorf("FlagSolverAuctioneer() = %v, want %v", got, tt.want)
 			}
 		})
@@ -501,7 +501,7 @@ func TestFlagUnknownAuctioneer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FlagUnknownAuctioneer(tt.callConfig, &version); got != tt.want {
+			if got, _ := FlagUnknownAuctioneer(tt.callConfig, &version); got != tt.want {
 				t.Errorf("FlagUnknownAuctioneer() = %v, want %v", got, tt.want)
 			}
 		})
@@ -537,7 +537,7 @@ func TestFlagVerifyCallChainHash(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FlagVerifyCallChainHash(tt.callConfig, &version); got != tt.want {
+			if got, _ := FlagVerifyCallChainHash(tt.callConfig, &version); got != tt.want {
 				t.Errorf("FlagVerifyCallChainHash() = %v, want %v", got, tt.want)
 			}
 		})
@@ -573,7 +573,7 @@ func TestFlagInvertBidValue(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FlagInvertBidValue(tt.callConfig, &version); got != tt.want {
+			if got, _ := FlagInvertBidValue(tt.callConfig, &version); got != tt.want {
 				t.Errorf("FlagInvertBidValue() = %v, want %v", got, tt.want)
 			}
 		})
@@ -609,7 +609,7 @@ func TestFlagRequireFulfillment(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FlagRequireFulfillment(tt.callConfig, &version); got != tt.want {
+			if got, _ := FlagRequireFulfillment(tt.callConfig, &version); got != tt.want {
 				t.Errorf("FlagRequireFulfillment() = %v, want %v", got, tt.want)
 			}
 		})
@@ -645,7 +645,7 @@ func TestFlagTrustedOpHash(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FlagTrustedOpHash(tt.callConfig, &version); got != tt.want {
+			if got, _ := FlagTrustedOpHash(tt.callConfig, &version); got != tt.want {
 				t.Errorf("FlagTrustedOpHash() = %v, want %v", got, tt.want)
 			}
 		})
@@ -681,7 +681,7 @@ func TestFlagForwardReturnData(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FlagForwardReturnData(tt.callConfig, &version); got != tt.want {
+			if got, _ := FlagForwardReturnData(tt.callConfig, &version); got != tt.want {
 				t.Errorf("FlagForwardReturnData() = %v, want %v", got, tt.want)
 			}
 		})
@@ -717,7 +717,7 @@ func TestFlagExPostBids(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FlagExPostBids(tt.callConfig, &version); got != tt.want {
+			if got, _ := FlagExPostBids(tt.callConfig, &version); got != tt.want {
 				t.Errorf("FlagExPostBids() = %v, want %v", got, tt.want)
 			}
 		})
@@ -731,13 +731,13 @@ func TestFlagVerifyCallChainHashAndInvertBidValue(t *testing.T) {
 	callConfig := uint32(1<<IndexLegacyVerifyCallChainHash | 1<<IndexLegacyInvertBidValue)
 	want := true
 
-	if got := FlagVerifyCallChainHash(callConfig, &version); got != want {
+	if got, _ := FlagVerifyCallChainHash(callConfig, &version); got != want {
 		t.Errorf("FlagVerifyCallChainHash() = %v, want %v", got, want)
 	}
 
 	want = true
 
-	if got := FlagInvertBidValue(callConfig, &version); got != want {
+	if got, _ := FlagInvertBidValue(callConfig, &version); got != want {
 		t.Errorf("FlagInvertBidValue() = %v, want %v", got, want)
 	}
 }
@@ -749,13 +749,13 @@ func TestFlagTrackUserReturnDataAndDelegateUser(t *testing.T) {
 	callConfig := uint32(1<<IndexLegacyTrackUserReturnData | 1<<IndexLegacyDelegateUser)
 	want := true
 
-	if got := FlagTrackUserReturnData(callConfig, &version); got != want {
+	if got, _ := FlagTrackUserReturnData(callConfig, &version); got != want {
 		t.Errorf("FlagTrackUserReturnData() = %v, want %v", got, want)
 	}
 
 	want = true
 
-	if got := FlagDelegateUser(callConfig, &version); got != want {
+	if got, _ := FlagDelegateUser(callConfig, &version); got != want {
 		t.Errorf("FlagDelegateUser() = %v, want %v", got, want)
 	}
 }
@@ -767,13 +767,13 @@ func TestFlagRequirePreSolverAndRequirePostSolver(t *testing.T) {
 	callConfig := uint32(1<<IndexLegacyRequirePreSolver | 1<<IndexLegacyRequirePostSolver)
 	want := true
 
-	if got := FlagRequirePreSolver(callConfig, &version); got != want {
+	if got, _ := FlagRequirePreSolver(callConfig, &version); got != want {
 		t.Errorf("FlagRequirePreSolver() = %v, want %v", got, want)
 	}
 
 	want = true
 
-	if got := FlagRequirePostSolver(callConfig, &version); got != want {
+	if got, _ := FlagRequirePostSolver(callConfig, &version); got != want {
 		t.Errorf("FlagRequirePostSolver() = %v, want %v", got, want)
 	}
 }
@@ -783,12 +783,12 @@ func TestFlagMultipleSuccessfulSolvers(t *testing.T) {
 
 	callConfig := uint32(532548)
 
-	version := "1.5"
-	if got := FlagMultipleSuccessfulSolvers(callConfig, &version); got != true {
+	version := "1.6"
+	if got, _ := FlagMultipleSuccessfulSolvers(callConfig, &version); got != true {
 		t.Errorf("FlagMultipleSuccessfulSolvers() = %v, want %v", got, true)
 	}
 
-	if got := FlagExPostBids(callConfig, &version); got != false {
+	if got, _ := FlagExPostBids(callConfig, &version); got != false {
 		t.Errorf("FlagExPostBids() = %v, want %v", got, false)
 	}
 }

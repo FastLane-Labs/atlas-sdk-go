@@ -8,21 +8,22 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func generateUserOperation() *UserOperationLegacy {
-	return &UserOperationLegacy{
-		From:         common.HexToAddress("0x1"),
-		To:           common.HexToAddress("0x2"),
-		Deadline:     big.NewInt(100),
-		Gas:          big.NewInt(200),
-		Nonce:        big.NewInt(300),
-		MaxFeePerGas: big.NewInt(400),
-		Value:        big.NewInt(500),
-		Dapp:         common.HexToAddress("0x3"),
-		Control:      common.HexToAddress("0x4"),
-		CallConfig:   600,
-		SessionKey:   common.HexToAddress("0x5"),
-		Data:         []byte("data"),
-		Signature:    []byte("signature"),
+func generateUserOperation() *UserOperation {
+	return &UserOperation{
+		chainId:      0,
+		from:         common.HexToAddress("0x1"),
+		to:           common.HexToAddress("0x2"),
+		deadline:     big.NewInt(100),
+		gas:          big.NewInt(200),
+		nonce:        big.NewInt(300),
+		maxFeePerGas: big.NewInt(400),
+		value:        big.NewInt(500),
+		dapp:         common.HexToAddress("0x3"),
+		control:      common.HexToAddress("0x4"),
+		callConfig:   600,
+		sessionKey:   common.HexToAddress("0x5"),
+		data:         []byte("data"),
+		signature:    []byte("signature"),
 	}
 }
 
@@ -32,7 +33,7 @@ func TestUserOperationHashDefault(t *testing.T) {
 	userOp := generateUserOperation()
 	want := common.HexToHash("0x021a7f3f62347f1f3d1163aa8eb9fc965e87556aede03c7182ec05bc60311b64")
 
-	result, err := userOp.Hash(false, 0, nil)
+	result, err := userOp.Hash(false)
 	if err != nil {
 		t.Errorf("UserOperation.Hash() error = %v", err)
 	}
@@ -48,7 +49,7 @@ func TestUserOperationHashTrusted(t *testing.T) {
 	userOp := generateUserOperation()
 	want := common.HexToHash("0x96aa1212cae2645ba1b8bf8014abccdfe9a60c16f86e21f82753d4cecc0b6089")
 
-	result, err := userOp.Hash(true, 0, nil)
+	result, err := userOp.Hash(true)
 	if err != nil {
 		t.Errorf("UserOperation.Hash() error = %v", err)
 	}
@@ -78,10 +79,10 @@ func TestUserOperationValidateSignature(t *testing.T) {
 	t.Parallel()
 
 	userOp := generateUserOperation()
-	userOp.From = common.HexToAddress("0xB764B6545d283C0E547952763F8a843394295da1")
-	userOp.Signature = common.FromHex("0x63e05429d1f5253ceebddf5f709c33d211592798cc4f89af302ade417e1de0173dd2c50d1bccc996e68839491a3539c3400c8b0721c29c236a3027f1dc274e151b")
+	userOp.from = common.HexToAddress("0xB764B6545d283C0E547952763F8a843394295da1")
+	userOp.signature = common.FromHex("0x63e05429d1f5253ceebddf5f709c33d211592798cc4f89af302ade417e1de0173dd2c50d1bccc996e68839491a3539c3400c8b0721c29c236a3027f1dc274e151b")
 
-	if err := userOp.ValidateSignature(0, nil); err != nil {
+	if err := userOp.ValidateSignature(); err != nil {
 		t.Errorf("DAppOperation.checkSignature() error = %v", err)
 	}
 }
@@ -125,7 +126,7 @@ func TestNewUserOperationPartialRawWithHints(t *testing.T) {
 	// Run multiple times to ensure we get different orders
 	shuffledAtLeastOnce := false
 	for i := 0; i < 10; i++ {
-		result, err := NewUserOperationPartialRaw(0, nil, userOp, hints)
+		result, err := NewUserOperationPartialRaw(userOp, hints)
 		if err != nil {
 			t.Fatalf("NewUserOperationPartialRaw() error = %v", err)
 		}
@@ -168,26 +169,26 @@ func TestNewUserOperationPartialRawWithHints(t *testing.T) {
 func TestUserOperationV15UserOpHash(t *testing.T) {
 	t.Parallel()
 
-	userOp := UserOperationV15{
-		From:         common.HexToAddress("0xfc8b8974fc3adb8281a6c4c38d7cc895769a8568"),
-		To:           common.HexToAddress("0x5f4f2a8961ef043817100e512286ff5096ae0042"),
-		Value:        big.NewInt(0),
-		Gas:          big.NewInt(20000),
-		MaxFeePerGas: big.NewInt(5000000),
-		Nonce:        big.NewInt(1),
-		Deadline:     big.NewInt(27771705),
-		Dapp:         common.HexToAddress("0x0e3009d01e85ac49d164e453ec81283eaaf46fb5"),
-		Control:      common.HexToAddress("0x0e3009d01e85ac49d164e453ec81283eaaf46fb5"),
-		CallConfig:   532548,
-		DappGasLimit: 2000000,
-		SessionKey:   common.HexToAddress("0x30d995248f48f101d18b21ece539fb862d7b4487"),
-		Data:         []byte("0x1ad6fbc3"),
-		Signature:    common.FromHex("0x85a2bc106a41bfb5055d62c8afe7f649af5fcea06c40e4964e0f08eb85d805eb1ebd0be19740aa7841c5084e03ab03554fa9aa46aa315efff266d72b805178191c"),
+	userOp := UserOperation{
+		from:         common.HexToAddress("0xfc8b8974fc3adb8281a6c4c38d7cc895769a8568"),
+		to:           common.HexToAddress("0x5f4f2a8961ef043817100e512286ff5096ae0042"),
+		value:        big.NewInt(0),
+		gas:          big.NewInt(20000),
+		maxFeePerGas: big.NewInt(5000000),
+		nonce:        big.NewInt(1),
+		deadline:     big.NewInt(27771705),
+		dapp:         common.HexToAddress("0x0e3009d01e85ac49d164e453ec81283eaaf46fb5"),
+		control:      common.HexToAddress("0x0e3009d01e85ac49d164e453ec81283eaaf46fb5"),
+		callConfig:   532548,
+		sessionKey:   common.HexToAddress("0x30d995248f48f101d18b21ece539fb862d7b4487"),
+		data:         []byte("0x1ad6fbc3"),
+		signature:    common.FromHex("0x85a2bc106a41bfb5055d62c8afe7f649af5fcea06c40e4964e0f08eb85d805eb1ebd0be19740aa7841c5084e03ab03554fa9aa46aa315efff266d72b805178191c"),
+		dappGasLimit: 2000000,
 	}
 
 	want := common.HexToHash("0xa560ebeaa0ea1144e7ef00f5f31d4f7a87eafa1da0a2b5f747bd8ee759e1fca5")
 
-	result, err := userOp.Hash(true, 0, nil)
+	result, err := userOp.Hash(true)
 	if err != nil {
 		t.Errorf("UserOperation.Hash() error = %v", err)
 	}

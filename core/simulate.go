@@ -67,6 +67,13 @@ var (
 		30: "MetacallGasLimitTooLow",
 		31: "MetacallGasLimitTooHigh",
 		32: "DAppGasLimitMismatch",
+		33: "SolverGasLimitMismatch",
+		34: "BundlerSurchargeRateMismatch",
+		35: "ExPostBidsAndMultipleSuccessfulSolversNotSupportedTogether",
+		36: "InvertsBidValueAndMultipleSuccessfulSolversNotSupportedTogether",
+		37: "NeedSolversForMultipleSuccessfulSolvers",
+		38: "SolverCannotBeAuctioneerForMultipleSuccessfulSolvers",
+		39: "CannotRequireFulfillmentForMultipleSuccessfulSolvers",
 	}
 
 	SolverOutcome = map[uint64]string{
@@ -161,7 +168,7 @@ func (e *SolverOperationSimulationError) Error() string {
 	)
 }
 
-func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, userOp types.UserOperation) *UserOperationSimulationError {
+func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, userOp *types.UserOperation) *UserOperationSimulationError {
 	_version := *version
 	if config.IsMonad(chainId) {
 		_version = config.ToMonadVersion(version)
@@ -182,7 +189,7 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 		return &UserOperationSimulationError{err: err}
 	}
 
-	pData, err := simulatorAbi.Pack(simUserOperationFunction, userOp)
+	pData, err := simulatorAbi.Pack(simUserOperationFunction, userOp.ToParams())
 	if err != nil {
 		return &UserOperationSimulationError{err: fmt.Errorf("failed to pack %s: %w", simUserOperationFunction, err)}
 	}
@@ -254,7 +261,7 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 	return nil
 }
 
-func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, userOp types.UserOperation, solverOp *types.SolverOperation, allowTracing bool) (*big.Int, *SolverOperationSimulationError) {
+func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, userOp *types.UserOperation, solverOp *types.SolverOperation, allowTracing bool) (*big.Int, *SolverOperationSimulationError) {
 	_version := *version
 	if config.IsMonad(chainId) {
 		_version = config.ToMonadVersion(version)
@@ -275,12 +282,12 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		return nil, &SolverOperationSimulationError{err: err}
 	}
 
-	dAppOp, err := generateDappOperationForSimulator(chainId, &_version, userOp, solverOp)
+	dAppOp, err := generateDappOperationForSimulator(&_version, userOp, solverOp)
 	if err != nil {
 		return nil, &SolverOperationSimulationError{err: err}
 	}
 
-	pData, err := simulatorAbi.Pack(simSolverCallFunction, userOp, solverOp, dAppOp)
+	pData, err := simulatorAbi.Pack(simSolverCallFunction, userOp.ToParams(), solverOp, dAppOp)
 	if err != nil {
 		return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to pack %s: %w", simSolverCallFunction, err)}
 	}
@@ -334,10 +341,15 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		}
 	)
 
+	exPostBids, err := utils.FlagExPostBids(userOp.GetCallConfig(), &_version)
+	if err != nil {
+		return nil, &SolverOperationSimulationError{err: err}
+	}
+
 	ctx, cancel := NewContextWithNetworkDeadline()
 	defer cancel()
 
-	if !utils.FlagExPostBids(userOp.GetCallConfig(), &_version) || !allowTracing {
+	if !exPostBids || !allowTracing {
 		bData, err = ethClient.CallContract(ctx, callMsg, nil)
 		if err != nil {
 			return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to call %s: %w", simSolverCallFunction, err)}
@@ -382,7 +394,7 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		}
 	}
 
-	if !utils.FlagExPostBids(userOp.GetCallConfig(), &_version) {
+	if !exPostBids {
 		// If ex post bids are not enabled, we can directly return the bid amount
 		return solverOp.BidAmount, nil
 	}
@@ -395,8 +407,13 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 	return exPostBidAmount, nil
 }
 
-func generateDappOperationForSimulator(chainId uint64, version *string, userOp types.UserOperation, solverOp *types.SolverOperation) (*types.DAppOperation, error) {
-	userOpHash, err := userOp.Hash(utils.FlagTrustedOpHash(userOp.GetCallConfig(), version), chainId, version)
+func generateDappOperationForSimulator(version *string, userOp *types.UserOperation, solverOp *types.SolverOperation) (*types.DAppOperation, error) {
+	trustedOpHash, err := utils.FlagTrustedOpHash(userOp.GetCallConfig(), version)
+	if err != nil {
+		return nil, err
+	}
+
+	userOpHash, err := userOp.Hash(trustedOpHash)
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash userOp: %w", err)
 	}
@@ -413,7 +430,12 @@ func generateDappOperationForSimulator(chainId uint64, version *string, userOp t
 		Signature:     []byte(""),
 	}
 
-	if utils.FlagVerifyCallChainHash(userOp.GetCallConfig(), version) {
+	verifyCallChainHash, err := utils.FlagVerifyCallChainHash(userOp.GetCallConfig(), version)
+	if err != nil {
+		return nil, err
+	}
+
+	if verifyCallChainHash {
 		callChainHash, err := CallChainHash(userOp, []*types.SolverOperation{solverOp})
 		if err != nil {
 			return nil, fmt.Errorf("failed to calculate callChainHash: %w", err)
@@ -424,7 +446,7 @@ func generateDappOperationForSimulator(chainId uint64, version *string, userOp t
 	return dAppOp, nil
 }
 
-func (sdk *AtlasSdk) EstimateMetacallGasLimit(chainId uint64, version *string, userOp types.UserOperation, solverOps []types.SolverOperation) (uint64, error) {
+func (sdk *AtlasSdk) EstimateMetacallGasLimit(chainId uint64, version *string, userOp *types.UserOperation, solverOps []types.SolverOperation) (uint64, error) {
 	minVersion := config.AtlasV_1_5
 	if minSupport, err := config.IsVersionAtLeast(version, &minVersion); err != nil || !minSupport {
 		return 0, fmt.Errorf("metacall gas limit estimation is only supported for Atlas v1.5 and above")
@@ -445,12 +467,7 @@ func (sdk *AtlasSdk) EstimateMetacallGasLimit(chainId uint64, version *string, u
 		return 0, fmt.Errorf("failed to get eth client: %w", err)
 	}
 
-	userOpV15, ok := userOp.(*types.UserOperationV15)
-	if !ok {
-		return 0, fmt.Errorf("metacall gas limit estimation is only supported for UserOperationV1.5")
-	}
-
-	pData, err := simulatorAbi.Pack(estimateMetacallGasLimitFunction, userOpV15, solverOps)
+	pData, err := simulatorAbi.Pack(estimateMetacallGasLimitFunction, userOp.ToParams(), solverOps)
 	if err != nil {
 		return 0, fmt.Errorf("failed to pack %s: %w", estimateMetacallGasLimitFunction, err)
 	}

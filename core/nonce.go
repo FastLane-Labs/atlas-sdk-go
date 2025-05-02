@@ -18,7 +18,7 @@ const (
 	getDAppNextNonceFunction            = "getDAppNextNonce"
 )
 
-func (sdk *AtlasSdk) SetUserNonce(chainId uint64, version *string, userOp types.UserOperation) error {
+func (sdk *AtlasSdk) SetUserNonce(chainId uint64, version *string, userOp *types.UserOperation) error {
 	nonce, err := sdk.GetUserNextNonce(chainId, version, userOp.GetFrom(), userOp.GetCallConfig())
 	if err != nil {
 		return err
@@ -58,7 +58,12 @@ func (sdk *AtlasSdk) GetUserNextNonce(chainId uint64, version *string, user comm
 	mu.Lock()
 	defer mu.Unlock()
 
-	if utils.FlagUserNoncesSequential(callConfig, version) {
+	userNoncesSequential, err := utils.FlagUserNoncesSequential(callConfig, version)
+	if err != nil {
+		return nil, err
+	}
+
+	if userNoncesSequential {
 		pData, err = atlasVerificationAbi.Pack(getUserNextNonceFunction, user, true)
 		if err != nil {
 			return nil, fmt.Errorf("failed to pack %s: %w", getUserNextNonceFunction, err)
@@ -112,7 +117,7 @@ func (sdk *AtlasSdk) GetUserNextNonce(chainId uint64, version *string, user comm
 		return nil, fmt.Errorf("failed to cast %s: %w", getUserNextNonceFunction, err)
 	}
 
-	if !utils.FlagUserNoncesSequential(callConfig, version) {
+	if !userNoncesSequential {
 		sdk.userLastNonSequentialNonce[chainId][v][user] = nonce
 	}
 
@@ -120,7 +125,12 @@ func (sdk *AtlasSdk) GetUserNextNonce(chainId uint64, version *string, user comm
 }
 
 func (sdk *AtlasSdk) GetDAppNextNonce(chainId uint64, version *string, dApp common.Address, callConfig uint32) (*big.Int, error) {
-	if !utils.FlagDappNoncesSequential(callConfig, version) {
+	dappNoncesSequential, err := utils.FlagDappNoncesSequential(callConfig, version)
+	if err != nil {
+		return nil, err
+	}
+
+	if !dappNoncesSequential {
 		// Nonce not needed for non-sequential dapp calls
 		return new(big.Int).Set(common.Big0), nil
 	}

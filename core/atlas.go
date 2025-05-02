@@ -13,7 +13,7 @@ const (
 	metacallFunction = "metacall"
 )
 
-func (sdk *AtlasSdk) Metacall(chainId uint64, version *string, transactOpts *bind.TransactOpts, userOp types.UserOperation, solverOps types.SolverOperations, dAppOp *types.DAppOperation, gasRefundBeneficiary *common.Address) (*gethTypes.Transaction, error) {
+func (sdk *AtlasSdk) Metacall(chainId uint64, version *string, transactOpts *bind.TransactOpts, userOp *types.UserOperation, solverOps types.SolverOperations, dAppOp *types.DAppOperation, gasRefundBeneficiary *common.Address) (*gethTypes.Transaction, error) {
 	ethClient, err := sdk.getEthClient(chainId)
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func (sdk *AtlasSdk) Metacall(chainId uint64, version *string, transactOpts *bin
 
 	switch config.GetVersion(version) {
 	case config.AtlasV_1_0, config.AtlasV_1_1:
-		params = append(params, userOp, _solverOps, dAppOp)
+		params = append(params, userOp.ToParams(), _solverOps, dAppOp)
 
 	default:
 		var _gasRefundBeneficiary common.Address
@@ -53,7 +53,7 @@ func (sdk *AtlasSdk) Metacall(chainId uint64, version *string, transactOpts *bin
 			_gasRefundBeneficiary = *gasRefundBeneficiary
 		}
 
-		params = append(params, userOp, _solverOps, dAppOp, _gasRefundBeneficiary)
+		params = append(params, userOp.ToParams(), _solverOps, dAppOp, _gasRefundBeneficiary)
 	}
 
 	return contract.Transact(transactOpts, metacallFunction, params...)

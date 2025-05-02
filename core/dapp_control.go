@@ -6,19 +6,19 @@ import (
 	"math/big"
 
 	"github.com/FastLane-Labs/atlas-sdk-go/config"
-	"github.com/FastLane-Labs/atlas-sdk-go/contract/dappcontrol"
 	dappcontrol_1_5 "github.com/FastLane-Labs/atlas-sdk-go/contract/dappcontrol/1.5"
+	dappcontrol_legacy "github.com/FastLane-Labs/atlas-sdk-go/contract/dappcontrol/legacy"
 	"github.com/FastLane-Labs/atlas-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func (sdk *AtlasSdk) getDAppControlContract(chainId uint64, dAppControlAddr common.Address) (*dappcontrol.DAppControl, error) {
+func (sdk *AtlasSdk) getDAppControlContract(chainId uint64, dAppControlAddr common.Address) (*dappcontrol_legacy.DAppControl, error) {
 	ethClient, err := sdk.getEthClient(chainId)
 	if err != nil {
 		return nil, err
 	}
 
-	dAppControlContract, err := dappcontrol.NewDAppControl(dAppControlAddr, ethClient)
+	dAppControlContract, err := dappcontrol_legacy.NewDAppControl(dAppControlAddr, ethClient)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (sdk *AtlasSdk) GetDAppCallConfig(chainId uint64, dAppControlAddr common.Ad
 	return callConfig, nil
 }
 
-func (sdk *AtlasSdk) GetDAppConfig(chainId uint64, version *string, userOp types.UserOperation, dAppControlAddr common.Address) (types.DAppConfig, error) {
+func (sdk *AtlasSdk) GetDAppConfig(chainId uint64, version *string, userOp *types.UserOperation, dAppControlAddr common.Address) (types.DAppConfig, error) {
 	if *version == config.AtlasV_1_5 {
 		dAppControlContract, err := sdk.getDAppControlV15Contract(chainId, dAppControlAddr)
 		if err != nil {
@@ -111,7 +111,7 @@ func (sdk *AtlasSdk) GetDAppConfig(chainId uint64, version *string, userOp types
 	callOpts, cancel := NewCallOptsWithNetworkDeadline()
 	defer cancel()
 
-	dAppConfig, err := dAppControlContract.GetDAppConfig(callOpts, dappcontrol.UserOperation{
+	dAppConfig, err := dAppControlContract.GetDAppConfig(callOpts, dappcontrol_legacy.UserOperation{
 		From:         userOp.GetFrom(),
 		To:           userOp.GetTo(),
 		Value:        userOp.GetValue(),
