@@ -317,13 +317,13 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 	} else {
 		gasBuffer := minGasBuffer
 
-		solverGasLimit, err := sdk.GetDAppSolverGasLimit(chainId, userOp.GetControl())
+		solverGasLimit, err := sdk.GetDAppSolverGasLimit(chainId, &_version, userOp.GetControl())
 		if err != nil {
 			return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to get solver gas limit: %w", err)}
 		}
 
-		if solverGasLimit.Uint64() > gasBuffer {
-			gasBuffer = solverGasLimit.Uint64()
+		if uint64(solverGasLimit) > gasBuffer {
+			gasBuffer = uint64(solverGasLimit)
 		}
 
 		gasLimit = userOp.GetGas().Uint64() + solverOp.Gas.Uint64() + gasBuffer

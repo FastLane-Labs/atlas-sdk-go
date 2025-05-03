@@ -28,9 +28,9 @@ type UserOperationsParams struct {
 	Dapp                 common.Address
 	Control              common.Address
 	CallConfig           uint32
-	DappGasLimit         uint32   // From v1.5
-	SolverGasLimit       uint32   // From v1.6
-	BundlerSurchargeRate *big.Int // From v1.6
+	DappGasLimit         uint32   // From Atlas v1.5
+	SolverGasLimit       uint32   // From Atlas v1.6
+	BundlerSurchargeRate *big.Int // From Atlas v1.6
 	SessionKey           common.Address
 	Data                 []byte
 	Signature            []byte
@@ -51,9 +51,9 @@ type UserOperation struct {
 	dapp                 common.Address
 	control              common.Address
 	callConfig           uint32
-	dappGasLimit         uint32   // From v1.5
-	solverGasLimit       uint32   // From v1.6
-	bundlerSurchargeRate *big.Int // From v1.6
+	dappGasLimit         uint32   // From Atlas v1.5
+	solverGasLimit       uint32   // From Atlas v1.6
+	bundlerSurchargeRate *big.Int // From Atlas v1.6
 	sessionKey           common.Address
 	data                 []byte
 	signature            []byte
