@@ -27,7 +27,7 @@ func TestDAppOperationHash(t *testing.T) {
 	dAppOp := generateDAppOperation()
 	want := common.HexToHash("0x19f8a2e775a072f45728d1d87bcfff85ca5fecdf674f261af2a5c8c70b37a453")
 
-	result, err := dAppOp.Hash(0, nil)
+	result, err := dAppOp.Hash(0, &testConfigVersion)
 	if err != nil {
 		t.Errorf("DAppOperation.Hash() error = %v", err)
 	}
@@ -44,7 +44,7 @@ func TestDAppOperationCheckSignature(t *testing.T) {
 	dAppOp.From = common.HexToAddress("0xB764B6545d283C0E547952763F8a843394295da1")
 	dAppOp.Signature = common.FromHex("0x741bd1cc70e34a39d763ae23d0d94c6a9156b10ba9a4cead3e847d4f15ad6edf4a7a60b875f1cb1795358b7a395b422659b7336f2f3a90453f8c2a16369e69d81c")
 
-	if err := dAppOp.ValidateSignature(0, nil); err != nil {
+	if err := dAppOp.ValidateSignature(0, &testConfigVersion); err != nil {
 		t.Errorf("DAppOperation.checkSignature() error = %v", err)
 	}
 }

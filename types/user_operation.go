@@ -394,13 +394,13 @@ func (u *UserOperation) AbiEncode() ([]byte, error) {
 
 	switch u.versionAtLeast {
 	case config.AtlasV_1_6:
-		return userOpArgsV16.Pack(&u)
+		return userOpArgsV16.Pack(u.ToParams())
 
 	case config.AtlasV_1_5:
-		return userOpArgsV15.Pack(&u)
+		return userOpArgsV15.Pack(u.ToParams())
 
 	default:
-		return userOpArgsLegacy.Pack(&u)
+		return userOpArgsLegacy.Pack(u.ToParams())
 	}
 }
 

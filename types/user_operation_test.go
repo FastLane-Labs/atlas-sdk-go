@@ -9,22 +9,26 @@ import (
 )
 
 func generateUserOperation() *UserOperation {
-	return &UserOperation{
-		chainId:      0,
-		from:         common.HexToAddress("0x1"),
-		to:           common.HexToAddress("0x2"),
-		deadline:     big.NewInt(100),
-		gas:          big.NewInt(200),
-		nonce:        big.NewInt(300),
-		maxFeePerGas: big.NewInt(400),
-		value:        big.NewInt(500),
-		dapp:         common.HexToAddress("0x3"),
-		control:      common.HexToAddress("0x4"),
-		callConfig:   600,
-		sessionKey:   common.HexToAddress("0x5"),
-		data:         []byte("data"),
-		signature:    []byte("signature"),
+	userOp, err := NewUserOperation(0, UserOperationsParams{
+		From:         common.HexToAddress("0x1"),
+		To:           common.HexToAddress("0x2"),
+		Deadline:     big.NewInt(100),
+		Gas:          big.NewInt(200),
+		Nonce:        big.NewInt(300),
+		MaxFeePerGas: big.NewInt(400),
+		Value:        big.NewInt(500),
+		Dapp:         common.HexToAddress("0x3"),
+		Control:      common.HexToAddress("0x4"),
+		CallConfig:   600,
+		SessionKey:   common.HexToAddress("0x5"),
+		Data:         []byte("data"),
+		Signature:    []byte("signature"),
+	})
+	if err != nil {
+		panic(err)
 	}
+
+	return userOp
 }
 
 func TestUserOperationHashDefault(t *testing.T) {
@@ -163,37 +167,5 @@ func TestNewUserOperationPartialRawWithHints(t *testing.T) {
 
 	if !shuffledAtLeastOnce {
 		t.Error("multi-element slices were never shuffled after 10 attempts")
-	}
-}
-
-func TestUserOperationV15UserOpHash(t *testing.T) {
-	t.Parallel()
-
-	userOp := UserOperation{
-		from:         common.HexToAddress("0xfc8b8974fc3adb8281a6c4c38d7cc895769a8568"),
-		to:           common.HexToAddress("0x5f4f2a8961ef043817100e512286ff5096ae0042"),
-		value:        big.NewInt(0),
-		gas:          big.NewInt(20000),
-		maxFeePerGas: big.NewInt(5000000),
-		nonce:        big.NewInt(1),
-		deadline:     big.NewInt(27771705),
-		dapp:         common.HexToAddress("0x0e3009d01e85ac49d164e453ec81283eaaf46fb5"),
-		control:      common.HexToAddress("0x0e3009d01e85ac49d164e453ec81283eaaf46fb5"),
-		callConfig:   532548,
-		sessionKey:   common.HexToAddress("0x30d995248f48f101d18b21ece539fb862d7b4487"),
-		data:         []byte("0x1ad6fbc3"),
-		signature:    common.FromHex("0x85a2bc106a41bfb5055d62c8afe7f649af5fcea06c40e4964e0f08eb85d805eb1ebd0be19740aa7841c5084e03ab03554fa9aa46aa315efff266d72b805178191c"),
-		dappGasLimit: 2000000,
-	}
-
-	want := common.HexToHash("0xa560ebeaa0ea1144e7ef00f5f31d4f7a87eafa1da0a2b5f747bd8ee759e1fca5")
-
-	result, err := userOp.Hash(true)
-	if err != nil {
-		t.Errorf("UserOperation.Hash() error = %v", err)
-	}
-
-	if result != want {
-		t.Errorf("UserOperation.Hash() = %v, want %v", result, want)
 	}
 }

@@ -9,7 +9,7 @@ import (
 )
 
 func generateUserOperation() *types.UserOperation {
-	userOp, _ := types.NewUserOperation(
+	userOp, err := types.NewUserOperation(
 		0,
 		types.UserOperationsParams{
 			From:         common.HexToAddress("0x1"),
@@ -27,6 +27,9 @@ func generateUserOperation() *types.UserOperation {
 			Signature:    []byte("signature"),
 		},
 	)
+	if err != nil {
+		panic(err)
+	}
 
 	return userOp
 }
