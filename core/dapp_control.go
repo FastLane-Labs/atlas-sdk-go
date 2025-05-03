@@ -26,13 +26,13 @@ func (sdk *AtlasSdk) getDAppControlContract(chainId uint64, dAppControlAddr comm
 	return dAppControlContract, nil
 }
 
-func (sdk *AtlasSdk) getDAppControlV15Contract(chainId uint64, dAppControlAddr common.Address) (*dappcontrol_1_5.Dappcontrol, error) {
+func (sdk *AtlasSdk) getDAppControlV15Contract(chainId uint64, dAppControlAddr common.Address) (*dappcontrol_1_5.DAppControl, error) {
 	ethClient, err := sdk.getEthClient(chainId)
 	if err != nil {
 		return nil, err
 	}
 
-	dAppControlContract, err := dappcontrol_1_5.NewDappcontrol(dAppControlAddr, ethClient)
+	dAppControlContract, err := dappcontrol_1_5.NewDAppControl(dAppControlAddr, ethClient)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (sdk *AtlasSdk) GetDAppConfig(chainId uint64, version *string, userOp types
 			DappGasLimit: userOp.GetDappGasLimit(),
 			Data:         userOp.GetData(),
 			Signature:    userOp.GetSignature(),
-		})	
+		})
 		if err != nil {
 			return nil, err
 		}

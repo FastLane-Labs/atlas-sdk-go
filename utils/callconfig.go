@@ -51,7 +51,7 @@ const (
 
 func FlagUserNoncesSequential(callConfig uint32, version *string) bool {
 	idx := IndexLegacyUserNoncesSequential
-	minVersion := "1.5"
+	minVersion := config.AtlasV_1_5
 	if ok, err := config.IsVersionAtLeast(version, &minVersion); ok && err == nil {
 		idx = IndexV15UserNoncesSequential
 	}
@@ -60,7 +60,7 @@ func FlagUserNoncesSequential(callConfig uint32, version *string) bool {
 
 func FlagDappNoncesSequential(callConfig uint32, version *string) bool {
 	idx := IndexLegacyDappNoncesSequential
-	minVersion := "1.5"
+	minVersion := config.AtlasV_1_5
 	if ok, err := config.IsVersionAtLeast(version, &minVersion); ok && err == nil {
 		idx = IndexV15DappNoncesSequential
 	}
@@ -69,7 +69,7 @@ func FlagDappNoncesSequential(callConfig uint32, version *string) bool {
 
 func FlagRequirePreOps(callConfig uint32, version *string) bool {
 	idx := IndexLegacyRequirePreOps
-	minVersion := "1.5"
+	minVersion := config.AtlasV_1_5
 	if ok, err := config.IsVersionAtLeast(version, &minVersion); ok && err == nil {
 		idx = IndexV15RequirePreOps
 	}
@@ -78,7 +78,7 @@ func FlagRequirePreOps(callConfig uint32, version *string) bool {
 
 func FlagTrackPreOpsReturnData(callConfig uint32, version *string) bool {
 	idx := IndexLegacyTrackPreOpsReturnData
-	minVersion := "1.5"
+	minVersion := config.AtlasV_1_5
 	if ok, err := config.IsVersionAtLeast(version, &minVersion); ok && err == nil {
 		idx = IndexV15TrackPreOpsReturnData
 	}
@@ -87,7 +87,7 @@ func FlagTrackPreOpsReturnData(callConfig uint32, version *string) bool {
 
 func FlagTrackUserReturnData(callConfig uint32, version *string) bool {
 	idx := IndexLegacyTrackUserReturnData
-	minVersion := "1.5"
+	minVersion := config.AtlasV_1_5
 	if ok, err := config.IsVersionAtLeast(version, &minVersion); ok && err == nil {
 		idx = IndexV15TrackUserReturnData
 	}
@@ -96,7 +96,7 @@ func FlagTrackUserReturnData(callConfig uint32, version *string) bool {
 
 func FlagDelegateUser(callConfig uint32, version *string) bool {
 	idx := IndexLegacyDelegateUser
-	minVersion := "1.5"
+	minVersion := config.AtlasV_1_5
 	if ok, err := config.IsVersionAtLeast(version, &minVersion); ok && err == nil {
 		idx = IndexV15DelegateUser
 	}
@@ -105,7 +105,7 @@ func FlagDelegateUser(callConfig uint32, version *string) bool {
 
 func FlagRequirePreSolver(callConfig uint32, version *string) bool {
 	idx := IndexLegacyRequirePreSolver
-	minVersion := "1.5"
+	minVersion := config.AtlasV_1_5
 	if ok, err := config.IsVersionAtLeast(version, &minVersion); ok && err == nil {
 		idx = IndexV15RequirePreSolver
 	}
@@ -114,7 +114,7 @@ func FlagRequirePreSolver(callConfig uint32, version *string) bool {
 
 func FlagRequirePostSolver(callConfig uint32, version *string) bool {
 	idx := IndexLegacyRequirePostSolver
-	minVersion := "1.5"
+	minVersion := config.AtlasV_1_5
 	if ok, err := config.IsVersionAtLeast(version, &minVersion); ok && err == nil {
 		idx = IndexV15RequirePostSolver
 	}
@@ -128,7 +128,7 @@ func FlagRequirePostOps(callConfig uint32, version *string) bool {
 
 func FlagZeroSolvers(callConfig uint32, version *string) bool {
 	idx := IndexLegacyZeroSolvers
-	minVersion := "1.5"
+	minVersion := config.AtlasV_1_5
 	if ok, err := config.IsVersionAtLeast(version, &minVersion); ok && err == nil {
 		idx = IndexV15ZeroSolvers
 	}
@@ -137,7 +137,7 @@ func FlagZeroSolvers(callConfig uint32, version *string) bool {
 
 func FlagReuseUserOp(callConfig uint32, version *string) bool {
 	idx := IndexLegacyReuseUserOp
-	minVersion := "1.5"
+	minVersion := config.AtlasV_1_5
 	if ok, err := config.IsVersionAtLeast(version, &minVersion); ok && err == nil {
 		idx = IndexV15ReuseUserOp
 	}
@@ -146,7 +146,7 @@ func FlagReuseUserOp(callConfig uint32, version *string) bool {
 
 func FlagUserAuctioneer(callConfig uint32, version *string) bool {
 	idx := IndexLegacyUserAuctioneer
-	minVersion := "1.5"
+	minVersion := config.AtlasV_1_5
 	if ok, err := config.IsVersionAtLeast(version, &minVersion); ok && err == nil {
 		idx = IndexV15UserAuctioneer
 	}
@@ -155,7 +155,7 @@ func FlagUserAuctioneer(callConfig uint32, version *string) bool {
 
 func FlagSolverAuctioneer(callConfig uint32, version *string) bool {
 	idx := IndexLegacySolverAuctioneer
-	minVersion := "1.5"
+	minVersion := config.AtlasV_1_5
 	if ok, err := config.IsVersionAtLeast(version, &minVersion); ok && err == nil {
 		idx = IndexV15SolverAuctioneer
 	}
@@ -164,7 +164,7 @@ func FlagSolverAuctioneer(callConfig uint32, version *string) bool {
 
 func FlagUnknownAuctioneer(callConfig uint32, version *string) bool {
 	idx := IndexLegacyUnknownAuctioneer
-	minVersion := "1.5"
+	minVersion := config.AtlasV_1_5
 	if ok, err := config.IsVersionAtLeast(version, &minVersion); ok && err == nil {
 		idx = IndexV15UnknownAuctioneer
 	}
@@ -173,7 +173,7 @@ func FlagUnknownAuctioneer(callConfig uint32, version *string) bool {
 
 func FlagVerifyCallChainHash(callConfig uint32, version *string) bool {
 	idx := IndexLegacyVerifyCallChainHash
-	minVersion := "1.5"
+	minVersion := config.AtlasV_1_5
 	if ok, err := config.IsVersionAtLeast(version, &minVersion); ok && err == nil {
 		idx = IndexV15VerifyCallChainHash
 	}
@@ -182,7 +182,7 @@ func FlagVerifyCallChainHash(callConfig uint32, version *string) bool {
 
 func FlagForwardReturnData(callConfig uint32, version *string) bool {
 	idx := IndexLegacyForwardReturnData
-	minVersion := "1.5"
+	minVersion := config.AtlasV_1_5
 	if ok, err := config.IsVersionAtLeast(version, &minVersion); ok && err == nil {
 		idx = IndexV15ForwardReturnData
 	}
@@ -191,7 +191,7 @@ func FlagForwardReturnData(callConfig uint32, version *string) bool {
 
 func FlagRequireFulfillment(callConfig uint32, version *string) bool {
 	idx := IndexLegacyRequireFulfillment
-	minVersion := "1.5"
+	minVersion := config.AtlasV_1_5
 	if ok, err := config.IsVersionAtLeast(version, &minVersion); ok && err == nil {
 		idx = IndexV15RequireFulfillment
 	}
@@ -200,7 +200,7 @@ func FlagRequireFulfillment(callConfig uint32, version *string) bool {
 
 func FlagTrustedOpHash(callConfig uint32, version *string) bool {
 	idx := IndexLegacyTrustedOpHash
-	minVersion := "1.5"
+	minVersion := config.AtlasV_1_5
 	if ok, err := config.IsVersionAtLeast(version, &minVersion); ok && err == nil {
 		idx = IndexV15TrustedOpHash
 	}
@@ -209,7 +209,7 @@ func FlagTrustedOpHash(callConfig uint32, version *string) bool {
 
 func FlagInvertBidValue(callConfig uint32, version *string) bool {
 	idx := IndexLegacyInvertBidValue
-	minVersion := "1.5"
+	minVersion := config.AtlasV_1_5
 	if ok, err := config.IsVersionAtLeast(version, &minVersion); ok && err == nil {
 		idx = IndexV15InvertBidValue
 	}
@@ -218,7 +218,7 @@ func FlagInvertBidValue(callConfig uint32, version *string) bool {
 
 func FlagExPostBids(callConfig uint32, version *string) bool {
 	idx := IndexLegacyExPostBids
-	minVersion := "1.5"
+	minVersion := config.AtlasV_1_5
 	if ok, err := config.IsVersionAtLeast(version, &minVersion); ok && err == nil {
 		idx = IndexV15ExPostBids
 	}

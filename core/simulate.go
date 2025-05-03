@@ -17,6 +17,7 @@ const (
 	simUserOperationFunction         = "simUserOperation"
 	simSolverCallFunction            = "simSolverCall"
 	minGasBuffer                     = uint64(2_500_000)
+	simGasSuggestedBuffer            = uint64(500_000)
 	estimateMetacallGasLimitFunction = "estimateMetacallGasLimit"
 )
 
@@ -161,17 +162,22 @@ func (e *SolverOperationSimulationError) Error() string {
 }
 
 func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, userOp types.UserOperation) *UserOperationSimulationError {
+	_version := *version
+	if config.IsMonad(chainId) {
+		_version = config.ToMonadVersion(version)
+	}
+
 	ethClient, err := sdk.getEthClient(chainId)
 	if err != nil {
 		return &UserOperationSimulationError{err: err}
 	}
 
-	simulatorAddr, err := config.GetSimulatorAddress(chainId, version)
+	simulatorAddr, err := config.GetSimulatorAddress(chainId, &_version)
 	if err != nil {
 		return &UserOperationSimulationError{err: err}
 	}
 
-	simulatorAbi, err := contract.GetSimulatorAbi(version)
+	simulatorAbi, err := contract.GetSimulatorAbi(&_version)
 	if err != nil {
 		return &UserOperationSimulationError{err: err}
 	}
@@ -181,6 +187,29 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 		return &UserOperationSimulationError{err: fmt.Errorf("failed to pack %s: %w", simUserOperationFunction, err)}
 	}
 
+	var (
+		gasLimit   uint64
+		minVersion = config.AtlasV_1_5
+	)
+
+	gte_1_5, err := config.IsVersionAtLeast(&_version, &minVersion)
+	if err != nil {
+		return &UserOperationSimulationError{err: fmt.Errorf("failed to check version: %w", err)}
+	}
+
+	if gte_1_5 {
+		_gasLimit, err := sdk.EstimateMetacallGasLimit(chainId, &_version, userOp, []types.SolverOperation{})
+		if err != nil {
+			return &UserOperationSimulationError{err: fmt.Errorf("failed to estimate metacall gas limit: %w", err)}
+		}
+
+		gasLimit = _gasLimit + simGasSuggestedBuffer
+	} else {
+		gasLimit = userOp.GetGas().Uint64() + minGasBuffer
+	}
+
+	gasPrice := new(big.Int).Set(userOp.GetMaxFeePerGas())
+
 	ctx, cancel := NewContextWithNetworkDeadline()
 	defer cancel()
 
@@ -188,21 +217,22 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 		ctx,
 		ethereum.CallMsg{
 			To:        &simulatorAddr,
-			Gas:       userOp.GetGas().Uint64() + minGasBuffer,
-			GasFeeCap: new(big.Int).Set(userOp.GetMaxFeePerGas()),
+			Gas:       gasLimit,
+			GasFeeCap: gasPrice,
 			Value:     new(big.Int).Set(userOp.GetValue()),
 			Data:      pData,
 		},
 		nil)
 	if err != nil {
 		return &UserOperationSimulationError{err: fmt.Errorf(
-			"failed to call %s: %w, simulatorAddr %s, pData %s, version %s, userOp %s",
+			"failed to call %s: %w, simulatorAddr %s, pData %s, version %s, userOp %s, gasLimit %d",
 			simUserOperationFunction,
 			err,
-			simulatorAddr,
+			simulatorAddr.Hex(),
 			hex.EncodeToString(pData),
-			*version,
+			_version,
 			userOp.EncodeToRaw(),
+			gasLimit,
 		)}
 	}
 
@@ -217,7 +247,7 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 		return &UserOperationSimulationError{
 			Result:           result,
 			ValidCallsResult: uint8(validCallResult.Uint64()),
-			Data:             hex.EncodeToString(pData),
+			Data:             hex.EncodeToString(pData) + fmt.Sprintf(", simulatorAddr %s, version %s, gasLimit %d, gasPrice %s, rawReturnData %s", simulatorAddr.Hex(), _version, gasLimit, gasPrice.String(), hex.EncodeToString(bData)),
 		}
 	}
 
@@ -225,22 +255,27 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 }
 
 func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, userOp types.UserOperation, solverOp *types.SolverOperation, allowTracing bool) (*big.Int, *SolverOperationSimulationError) {
+	_version := *version
+	if config.IsMonad(chainId) {
+		_version = config.ToMonadVersion(version)
+	}
+
 	ethClient, err := sdk.getEthClient(chainId)
 	if err != nil {
 		return nil, &SolverOperationSimulationError{err: err}
 	}
 
-	simulatorAddr, err := config.GetSimulatorAddress(chainId, version)
+	simulatorAddr, err := config.GetSimulatorAddress(chainId, &_version)
 	if err != nil {
 		return nil, &SolverOperationSimulationError{err: err}
 	}
 
-	simulatorAbi, err := contract.GetSimulatorAbi(version)
+	simulatorAbi, err := contract.GetSimulatorAbi(&_version)
 	if err != nil {
 		return nil, &SolverOperationSimulationError{err: err}
 	}
 
-	dAppOp, err := generateDappOperationForSimulator(chainId, version, userOp, solverOp)
+	dAppOp, err := generateDappOperationForSimulator(chainId, &_version, userOp, solverOp)
 	if err != nil {
 		return nil, &SolverOperationSimulationError{err: err}
 	}
@@ -255,15 +290,36 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		gasPrice.Set(solverOp.MaxFeePerGas)
 	}
 
-	gasBuffer := minGasBuffer
+	var (
+		gasLimit   uint64
+		minVersion = config.AtlasV_1_5
+	)
 
-	solverGasLimit, err := sdk.GetDAppSolverGasLimit(chainId, userOp.GetControl())
+	gte_1_5, err := config.IsVersionAtLeast(&_version, &minVersion)
 	if err != nil {
-		return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to get solver gas limit: %w", err)}
+		return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to check version: %w", err)}
 	}
 
-	if solverGasLimit.Uint64() > gasBuffer {
-		gasBuffer = solverGasLimit.Uint64()
+	if gte_1_5 {
+		_gasLimit, err := sdk.EstimateMetacallGasLimit(chainId, &_version, userOp, []types.SolverOperation{*solverOp})
+		if err != nil {
+			return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to estimate metacall gas limit: %w", err)}
+		}
+
+		gasLimit = _gasLimit + simGasSuggestedBuffer
+	} else {
+		gasBuffer := minGasBuffer
+
+		solverGasLimit, err := sdk.GetDAppSolverGasLimit(chainId, userOp.GetControl())
+		if err != nil {
+			return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to get solver gas limit: %w", err)}
+		}
+
+		if solverGasLimit.Uint64() > gasBuffer {
+			gasBuffer = solverGasLimit.Uint64()
+		}
+
+		gasLimit = userOp.GetGas().Uint64() + solverOp.Gas.Uint64() + gasBuffer
 	}
 
 	var (
@@ -271,7 +327,7 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		traceResult callFrame
 		callMsg     = ethereum.CallMsg{
 			To:        &simulatorAddr,
-			Gas:       userOp.GetGas().Uint64() + solverOp.Gas.Uint64() + gasBuffer,
+			Gas:       gasLimit,
 			GasFeeCap: gasPrice,
 			Value:     new(big.Int).Set(userOp.GetValue()),
 			Data:      pData,
@@ -281,7 +337,7 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 	ctx, cancel := NewContextWithNetworkDeadline()
 	defer cancel()
 
-	if !utils.FlagExPostBids(userOp.GetCallConfig(), version) || !allowTracing {
+	if !utils.FlagExPostBids(userOp.GetCallConfig(), &_version) || !allowTracing {
 		bData, err = ethClient.CallContract(ctx, callMsg, nil)
 		if err != nil {
 			return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to call %s: %w", simSolverCallFunction, err)}
@@ -322,16 +378,16 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		return nil, &SolverOperationSimulationError{
 			Result:        result,
 			SolverOutcome: solverOutcomeResult.Uint64(),
-			Data:          hex.EncodeToString(pData),
+			Data:          hex.EncodeToString(pData) + fmt.Sprintf(", simulatorAddr %s, version %s, gasLimit %d, gasPrice %s, rawReturnData %s", simulatorAddr.Hex(), _version, gasLimit, gasPrice.String(), hex.EncodeToString(bData)),
 		}
 	}
 
-	if !utils.FlagExPostBids(userOp.GetCallConfig(), version) {
+	if !utils.FlagExPostBids(userOp.GetCallConfig(), &_version) {
 		// If ex post bids are not enabled, we can directly return the bid amount
 		return solverOp.BidAmount, nil
 	}
 
-	exPostBidAmount, err := sdk.GetSolverBidAmountFromTrace(chainId, version, &traceResult)
+	exPostBidAmount, err := sdk.GetSolverBidAmountFromTrace(chainId, &_version, &traceResult)
 	if err != nil {
 		return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to get solver bid amount from trace: %w pData %s", err, hex.EncodeToString(pData))}
 	}

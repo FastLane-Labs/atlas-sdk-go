@@ -26,12 +26,13 @@ type ChainConfig struct {
 }
 
 const (
-	AtlasV_1_0   = "1.0"
-	AtlasV_1_1   = "1.1"
-	AtlasV_1_2   = "1.2"
-	AtlasV_1_3   = "1.3"
-	AtlasV_1_5   = "1.5"
-	AtlasVLatest = AtlasV_1_5
+	AtlasV_1_0       = "1.0"
+	AtlasV_1_1       = "1.1"
+	AtlasV_1_2       = "1.2"
+	AtlasV_1_3       = "1.3"
+	AtlasV_1_5       = "1.5"
+	AtlasV_1_5_MONAD = "1.5-monad"
+	AtlasVLatest     = AtlasV_1_5
 )
 
 var (
@@ -40,7 +41,8 @@ var (
 	initOnce           sync.Once
 	mu                 sync.RWMutex
 
-	allVersions = []string{AtlasV_1_0, AtlasV_1_1, AtlasV_1_2, AtlasV_1_3, AtlasV_1_5}
+	allVersions      = []string{AtlasV_1_0, AtlasV_1_1, AtlasV_1_2, AtlasV_1_3, AtlasV_1_5, AtlasV_1_5_MONAD}
+	allMonadVersions = []string{AtlasV_1_5_MONAD}
 )
 
 func IsVersionAtLeast(version *string, minVersion *string) (bool, error) {
@@ -94,6 +96,13 @@ func InitChainConfig() error {
 
 		for chainId, config := range remoteConfig {
 			chainConfig[chainId] = config
+
+			if IsMonad(chainId) {
+				for version := range config {
+					monadVersion := ToMonadVersion(&version)
+					chainConfig[chainId][monadVersion] = config[version]
+				}
+			}
 		}
 	})
 
@@ -103,6 +112,12 @@ func InitChainConfig() error {
 func GetAllVersions() []string {
 	v := make([]string, len(allVersions))
 	copy(v, allVersions)
+	return v
+}
+
+func GetAllMonadVersions() []string {
+	v := make([]string, len(allMonadVersions))
+	copy(v, allMonadVersions)
 	return v
 }
 
@@ -148,6 +163,10 @@ func GetChainConfig(chainId uint64, version *string) (*ChainConfig, error) {
 	}
 
 	v := GetVersion(version)
+
+	if IsMonad(chainId) {
+		v = ToMonadVersion(&v)
+	}
 
 	mu.RLock()
 	defer mu.RUnlock()

@@ -5,6 +5,7 @@ go 1.22.2
 require (
 	github.com/FastLane-Labs/blockchain-rpc-go v0.0.0-20250113074257-15a9dd51b250
 	github.com/ethereum/go-ethereum v1.14.12
+	golang.org/x/sync v0.7.0
 )
 
 require (
@@ -39,7 +40,6 @@ require (
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	golang.org/x/crypto v0.22.0 // indirect
 	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa // indirect
-	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	rsc.io/tmplfunc v0.0.3 // indirect
