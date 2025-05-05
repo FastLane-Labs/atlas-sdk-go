@@ -30,7 +30,6 @@ const (
 	AtlasV_1_1       = "1.1"
 	AtlasV_1_2       = "1.2"
 	AtlasV_1_3       = "1.3"
-	AtlasV_1_3_MONAD = "1.3-monad"
 	AtlasV_1_5       = "1.5"
 	AtlasV_1_5_MONAD = "1.5-monad"
 	AtlasV_1_6       = "1.6"
@@ -43,8 +42,8 @@ var (
 	initOnce           sync.Once
 	mu                 sync.RWMutex
 
-	allVersions      = []string{AtlasV_1_0, AtlasV_1_1, AtlasV_1_2, AtlasV_1_3, AtlasV_1_3_MONAD, AtlasV_1_5, AtlasV_1_5_MONAD, AtlasV_1_6}
-	allMonadVersions = []string{AtlasV_1_3_MONAD, AtlasV_1_5_MONAD}
+	allVersions      = []string{AtlasV_1_0, AtlasV_1_1, AtlasV_1_2, AtlasV_1_3, AtlasV_1_5, AtlasV_1_5_MONAD, AtlasV_1_6}
+	allMonadVersions = []string{AtlasV_1_5_MONAD}
 )
 
 func IsVersionAtLeast(version *string, minVersion *string) (bool, error) {
