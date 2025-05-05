@@ -97,7 +97,7 @@ func GetAtlasAbi(version *string) (*abi.ABI, error) {
 		return atlas_1_1_Abi, nil
 	case config.AtlasV_1_2:
 		return atlas_1_2_Abi, nil
-	case config.AtlasV_1_3:
+	case config.AtlasV_1_3, config.AtlasV_1_3_MONAD:
 		return atlas_1_3_Abi, nil
 	case config.AtlasV_1_5:
 		return atlas_1_5_Abi, nil
@@ -117,7 +117,7 @@ func GetAtlasVerificationAbi(version *string) (*abi.ABI, error) {
 		return atlasverification_1_1_Abi, nil
 	case config.AtlasV_1_2:
 		return atlasverification_1_2_Abi, nil
-	case config.AtlasV_1_3:
+	case config.AtlasV_1_3, config.AtlasV_1_3_MONAD:
 		return atlasverification_1_3_Abi, nil
 	case config.AtlasV_1_5:
 		return atlasverification_1_5_Abi, nil
@@ -137,7 +137,7 @@ func GetSimulatorAbi(version *string) (*abi.ABI, error) {
 		return simulator_1_1_Abi, nil
 	case config.AtlasV_1_2:
 		return simulator_1_2_Abi, nil
-	case config.AtlasV_1_3:
+	case config.AtlasV_1_3, config.AtlasV_1_3_MONAD:
 		return simulator_1_3_Abi, nil
 	case config.AtlasV_1_5:
 		return simulator_1_5_Abi, nil
@@ -157,7 +157,7 @@ func GetSorterAbi(version *string) (*abi.ABI, error) {
 		return sorter_1_1_Abi, nil
 	case config.AtlasV_1_2:
 		return sorter_1_2_Abi, nil
-	case config.AtlasV_1_3:
+	case config.AtlasV_1_3, config.AtlasV_1_3_MONAD:
 		return sorter_1_3_Abi, nil
 	case config.AtlasV_1_5:
 		return sorter_1_5_Abi, nil
@@ -171,7 +171,7 @@ func GetSorterAbi(version *string) (*abi.ABI, error) {
 
 func GetDAppControlAbi(version *string) (*abi.ABI, error) {
 	switch config.GetVersion(version) {
-	case config.AtlasV_1_0, config.AtlasV_1_1, config.AtlasV_1_2, config.AtlasV_1_3:
+	case config.AtlasV_1_0, config.AtlasV_1_1, config.AtlasV_1_2, config.AtlasV_1_3, config.AtlasV_1_3_MONAD:
 		return dappcontrol_legacy_Abi, nil
 	case config.AtlasV_1_5, config.AtlasV_1_5_MONAD:
 		return dappcontrol_1_5_Abi, nil
