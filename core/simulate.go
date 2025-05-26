@@ -480,7 +480,7 @@ func (sdk *AtlasSdk) EstimateMetacallGasLimit(chainId uint64, version *string, u
 		Data: pData,
 	}, nil)
 	if err != nil {
-		return 0, fmt.Errorf("failed to call %s: %w", estimateMetacallGasLimitFunction, err)
+		return 0, fmt.Errorf("failed to call %s: %w - pData %s - simulatorAddr %s", estimateMetacallGasLimitFunction, err, hex.EncodeToString(pData), simulatorAddr.Hex())
 	}
 
 	gasLimit, err := simulatorAbi.Unpack(estimateMetacallGasLimitFunction, bData)
