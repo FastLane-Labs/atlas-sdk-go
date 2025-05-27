@@ -17,7 +17,7 @@ const (
 	simUserOperationFunction         = "simUserOperation"
 	simSolverCallFunction            = "simSolverCall"
 	minGasBuffer                     = uint64(2_500_000)
-	simGasSuggestedBuffer            = uint64(300_000)
+	simGasSuggestedBuffer            = uint64(50_000)
 	estimateMetacallGasLimitFunction = "estimateMetacallGasLimit"
 )
 
