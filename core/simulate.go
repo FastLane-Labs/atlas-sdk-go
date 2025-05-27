@@ -17,7 +17,8 @@ const (
 	simUserOperationFunction         = "simUserOperation"
 	simSolverCallFunction            = "simSolverCall"
 	minGasBuffer                     = uint64(2_500_000)
-	simGasSuggestedBuffer            = uint64(50_000)
+	simGasSuggestedBuffer            = uint64(30_000)
+	simGasSuggestedBufferMonad       = uint64(300_000)
 	estimateMetacallGasLimitFunction = "estimateMetacallGasLimit"
 )
 
@@ -210,7 +211,12 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 			return &UserOperationSimulationError{err: fmt.Errorf("failed to estimate metacall gas limit: %w", err)}
 		}
 
-		gasLimit = _gasLimit + simGasSuggestedBuffer
+		buffer := simGasSuggestedBuffer
+		if config.IsMonad(chainId) {
+			buffer = simGasSuggestedBufferMonad
+		}
+
+		gasLimit = _gasLimit + buffer
 	} else {
 		gasLimit = userOp.GetGas().Uint64() + minGasBuffer
 	}
@@ -313,7 +319,12 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 			return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to estimate metacall gas limit: %w", err)}
 		}
 
-		gasLimit = _gasLimit + simGasSuggestedBuffer
+		buffer := simGasSuggestedBuffer
+		if config.IsMonad(chainId) {
+			buffer = simGasSuggestedBufferMonad
+		}
+
+		gasLimit = _gasLimit + buffer
 	} else {
 		gasBuffer := minGasBuffer
 
