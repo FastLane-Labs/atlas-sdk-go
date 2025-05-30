@@ -234,12 +234,6 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 	ctx, cancel := NewContextWithNetworkDeadline()
 	defer cancel()
 
-	blockNumber, err := ethClient.BlockNumber(ctx)
-	if err != nil {
-		return &UserOperationSimulationError{err: err}
-	}
-	fmt.Printf("[|%d] simulatorAddr %s, pData %s, version %s, userOp %s, gasLimit %d, gasPrice %s, blockNumber %d\n", chainId, simulatorAddr.Hex(), hex.EncodeToString(pData), _version, userOp.EncodeToRaw(), gasLimit, gasPrice.String(), blockNumber)
-
 	bData, err := ethClient.CallContract(
 		ctx,
 		ethereum.CallMsg{
