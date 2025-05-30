@@ -196,16 +196,24 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 	}
 
 	var (
-		gasLimit   uint64
-		minVersion = config.AtlasV_1_5
+		gasLimit uint64
+		v1_5     = config.AtlasV_1_5
+		v1_6_1   = config.AtlasV_1_6_1
 	)
 
-	gte_1_5, err := config.IsVersionAtLeast(&_version, &minVersion)
+	gte_1_5, err := config.IsVersionAtLeast(&_version, &v1_5)
 	if err != nil {
 		return &UserOperationSimulationError{err: fmt.Errorf("failed to check version: %w", err)}
 	}
 
-	if gte_1_5 {
+	gte_1_6_1, err := config.IsVersionAtLeast(&_version, &v1_6_1)
+	if err != nil {
+		return &UserOperationSimulationError{err: fmt.Errorf("failed to check version: %w", err)}
+	}
+
+	if gte_1_6_1 {
+		gasLimit = 0 // Infinite gas, the simulator will figure it out
+	} else if gte_1_5 {
 		_gasLimit, err := sdk.EstimateMetacallGasLimit(chainId, &_version, userOp, []types.SolverOperation{}, userOp.GetMaxFeePerGas())
 		if err != nil {
 			return &UserOperationSimulationError{err: fmt.Errorf("failed to estimate metacall gas limit: %w", err)}
@@ -304,16 +312,24 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 	}
 
 	var (
-		gasLimit   uint64
-		minVersion = config.AtlasV_1_5
+		gasLimit uint64
+		v1_5     = config.AtlasV_1_5
+		v1_6_1   = config.AtlasV_1_6_1
 	)
 
-	gte_1_5, err := config.IsVersionAtLeast(&_version, &minVersion)
+	gte_1_5, err := config.IsVersionAtLeast(&_version, &v1_5)
 	if err != nil {
 		return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to check version: %w", err)}
 	}
 
-	if gte_1_5 {
+	gte_1_6_1, err := config.IsVersionAtLeast(&_version, &v1_6_1)
+	if err != nil {
+		return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to check version: %w", err)}
+	}
+
+	if gte_1_6_1 {
+		gasLimit = 0 // Infinite gas, the simulator will figure it out
+	} else if gte_1_5 {
 		_gasLimit, err := sdk.EstimateMetacallGasLimit(chainId, &_version, userOp, []types.SolverOperation{*solverOp}, gasPrice)
 		if err != nil {
 			return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to estimate metacall gas limit: %w", err)}
