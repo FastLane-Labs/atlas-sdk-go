@@ -214,7 +214,7 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 	if gte_1_6_1 {
 		gasLimit = 0 // Infinite gas, the simulator will figure it out
 	} else if gte_1_5 {
-		_gasLimit, err := sdk.EstimateMetacallGasLimit(chainId, &_version, userOp, []types.SolverOperation{}, userOp.GetMaxFeePerGas())
+		_gasLimit, err := sdk.EstimateMetacallGasLimit(chainId, &_version, userOp, types.SolverOperations{}, userOp.GetMaxFeePerGas())
 		if err != nil {
 			return &UserOperationSimulationError{err: fmt.Errorf("failed to estimate metacall gas limit: %w", err)}
 		}
@@ -330,7 +330,7 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 	if gte_1_6_1 {
 		gasLimit = 0 // Infinite gas, the simulator will figure it out
 	} else if gte_1_5 {
-		_gasLimit, err := sdk.EstimateMetacallGasLimit(chainId, &_version, userOp, []types.SolverOperation{*solverOp}, gasPrice)
+		_gasLimit, err := sdk.EstimateMetacallGasLimit(chainId, &_version, userOp, types.SolverOperations{solverOp}, gasPrice)
 		if err != nil {
 			return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to estimate metacall gas limit: %w", err)}
 		}
@@ -473,7 +473,7 @@ func generateDappOperationForSimulator(version *string, userOp *types.UserOperat
 	return dAppOp, nil
 }
 
-func (sdk *AtlasSdk) EstimateMetacallGasLimit(chainId uint64, version *string, userOp *types.UserOperation, solverOps []types.SolverOperation, gasPrice *big.Int) (uint64, error) {
+func (sdk *AtlasSdk) EstimateMetacallGasLimit(chainId uint64, version *string, userOp *types.UserOperation, solverOps types.SolverOperations, gasPrice *big.Int) (uint64, error) {
 	minVersion := config.AtlasV_1_5
 	if minSupport, err := config.IsVersionAtLeast(version, &minVersion); err != nil || !minSupport {
 		return 0, fmt.Errorf("metacall gas limit estimation is only supported for Atlas v1.5 and above")
@@ -494,7 +494,12 @@ func (sdk *AtlasSdk) EstimateMetacallGasLimit(chainId uint64, version *string, u
 		return 0, fmt.Errorf("failed to get eth client: %w", err)
 	}
 
-	pData, err := simulatorAbi.Pack(estimateMetacallGasLimitFunction, userOp.ToParams(), solverOps)
+	_solverOps := make([]types.SolverOperation, len(solverOps))
+	for i, op := range solverOps {
+		_solverOps[i] = *op
+	}
+
+	pData, err := simulatorAbi.Pack(estimateMetacallGasLimitFunction, userOp.ToParams(), _solverOps)
 	if err != nil {
 		return 0, fmt.Errorf("failed to pack %s: %w", estimateMetacallGasLimitFunction, err)
 	}
