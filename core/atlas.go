@@ -13,6 +13,43 @@ const (
 	metacallFunction = "metacall"
 )
 
+func (sdk *AtlasSdk) GetMetacallCallData(chainId uint64, version *string, userOp *types.UserOperation, solverOps types.SolverOperations, dAppOp *types.DAppOperation, gasRefundBeneficiary *common.Address) ([]byte, error) {
+	atlasAbi, err := contract.GetAtlasAbi(version)
+	if err != nil {
+		return nil, err
+	}
+
+	userOp.Sanitize()
+	solverOps.Sanitize()
+	dAppOp.Sanitize()
+
+	_solverOps := make([]types.SolverOperation, len(solverOps))
+
+	for i, op := range solverOps {
+		_solverOps[i] = *op
+	}
+
+	var (
+		params = []interface{}{userOp.ToParams(), _solverOps, dAppOp}
+		v1_2   = config.AtlasV_1_2
+	)
+
+	gte_v1_2, err := config.IsVersionLatest(&v1_2)
+	if err != nil {
+		return nil, err
+	}
+
+	if gte_v1_2 {
+		var _gasRefundBeneficiary common.Address
+		if gasRefundBeneficiary != nil {
+			_gasRefundBeneficiary = *gasRefundBeneficiary
+		}
+		params = append(params, _gasRefundBeneficiary)
+	}
+
+	return atlasAbi.Pack(metacallFunction, params...)
+}
+
 func (sdk *AtlasSdk) Metacall(chainId uint64, version *string, transactOpts *bind.TransactOpts, userOp *types.UserOperation, solverOps types.SolverOperations, dAppOp *types.DAppOperation, gasRefundBeneficiary *common.Address) (*gethTypes.Transaction, error) {
 	ethClient, err := sdk.getEthClient(chainId)
 	if err != nil {
