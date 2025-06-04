@@ -34,7 +34,7 @@ func (sdk *AtlasSdk) GetMetacallCallData(chainId uint64, version *string, userOp
 		v1_2   = config.AtlasV_1_2
 	)
 
-	gte_v1_2, err := config.IsVersionLatest(&v1_2)
+	gte_v1_2, err := config.IsVersionAtLeast(version, &v1_2)
 	if err != nil {
 		return nil, err
 	}
