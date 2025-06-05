@@ -11,6 +11,7 @@ import (
 	"github.com/FastLane-Labs/atlas-sdk-go/utils"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
 const (
@@ -23,6 +24,8 @@ const (
 )
 
 var (
+	maxUint96, _ = new(big.Int).SetString("79228162514264337593543950335", 10)
+
 	SimulationResult = map[uint8]string{
 		0: "Unknown",
 		1: "VerificationSimFail",
@@ -504,16 +507,28 @@ func (sdk *AtlasSdk) EstimateMetacallGasLimit(chainId uint64, version *string, u
 		return 0, fmt.Errorf("failed to pack %s: %w", estimateMetacallGasLimitFunction, err)
 	}
 
+	overrides := map[common.Address]map[string]interface{}{
+		common.HexToAddress("0x0000000000000000000000000000000000000000"): {
+			"balance": (*hexutil.Big)(maxUint96),
+		},
+	}
+
 	ctx, cancel := NewContextWithNetworkDeadline()
 	defer cancel()
 
-	bData, err := ethClient.CallContract(ctx, ethereum.CallMsg{
-		To:       &simulatorAddr,
-		GasPrice: gasPrice,
-		Data:     pData,
-	}, nil)
+	var result string
+	err = ethClient.Client().CallContext(ctx, &result, "eth_call", map[string]interface{}{
+		"to":       simulatorAddr.Hex(),
+		"gasPrice": (*hexutil.Big)(gasPrice),
+		"data":     hexutil.Encode(pData),
+	}, "latest", overrides)
 	if err != nil {
 		return 0, fmt.Errorf("failed to call %s: %w - pData %s - simulatorAddr %s", estimateMetacallGasLimitFunction, err, hex.EncodeToString(pData), simulatorAddr.Hex())
+	}
+
+	bData, err := hexutil.Decode(result)
+	if err != nil {
+		return 0, fmt.Errorf("failed to decode result: %w", err)
 	}
 
 	gasLimit, err := simulatorAbi.Unpack(estimateMetacallGasLimitFunction, bData)
