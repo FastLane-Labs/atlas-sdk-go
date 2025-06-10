@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	userOpSolTypeV15, _ = abi.NewType("tuple", "struct UserOperation", []abi.ArgumentMarshaling{
+	userOpSolTypeV16, _ = abi.NewType("tuple", "struct UserOperation", []abi.ArgumentMarshaling{
 		{Name: "from", Type: "address", InternalType: "address"},
 		{Name: "to", Type: "address", InternalType: "address"},
 		{Name: "value", Type: "uint256", InternalType: "uint256"},
@@ -20,17 +20,19 @@ var (
 		{Name: "control", Type: "address", InternalType: "address"},
 		{Name: "callConfig", Type: "uint32", InternalType: "uint32"},
 		{Name: "dappGasLimit", Type: "uint32", InternalType: "uint32"},
+		{Name: "solverGasLimit", Type: "uint32", InternalType: "uint32"},
+		{Name: "bundlerSurchargeRate", Type: "uint24", InternalType: "uint24"},
 		{Name: "sessionKey", Type: "address", InternalType: "address"},
 		{Name: "data", Type: "bytes", InternalType: "bytes"},
 		{Name: "signature", Type: "bytes", InternalType: "bytes"},
 	})
 
-	userOpArgsV15 = abi.Arguments{
-		{Type: userOpSolTypeV15, Name: "userOperation"},
+	userOpArgsV16 = abi.Arguments{
+		{Type: userOpSolTypeV16, Name: "userOperation"},
 	}
 )
 
-func (u *UserOperation) toTypedDataTypesV15(trusted bool) apitypes.Types {
+func (u *UserOperation) toTypedDataTypesV16(trusted bool) apitypes.Types {
 	t := apitypes.Types{
 		"EIP712Domain": []apitypes.Type{
 			{Name: "name", Type: "string"},
@@ -48,6 +50,8 @@ func (u *UserOperation) toTypedDataTypesV15(trusted bool) apitypes.Types {
 			{Name: "control", Type: "address"},
 			{Name: "callConfig", Type: "uint32"},
 			{Name: "dappGasLimit", Type: "uint32"},
+			{Name: "solverGasLimit", Type: "uint32"},
+			{Name: "bundlerSurchargeRate", Type: "uint24"},
 			{Name: "sessionKey", Type: "address"},
 		}
 	} else {
@@ -63,6 +67,8 @@ func (u *UserOperation) toTypedDataTypesV15(trusted bool) apitypes.Types {
 			{Name: "control", Type: "address"},
 			{Name: "callConfig", Type: "uint32"},
 			{Name: "dappGasLimit", Type: "uint32"},
+			{Name: "solverGasLimit", Type: "uint32"},
+			{Name: "bundlerSurchargeRate", Type: "uint24"},
 			{Name: "sessionKey", Type: "address"},
 			{Name: "data", Type: "bytes"},
 		}
@@ -71,34 +77,36 @@ func (u *UserOperation) toTypedDataTypesV15(trusted bool) apitypes.Types {
 	return t
 }
 
-func (u *UserOperation) toTypedDataMessageV15(trusted bool) apitypes.TypedDataMessage {
-	u.Sanitize()
-
+func (u *UserOperation) toTypedDataMessageV16(trusted bool) apitypes.TypedDataMessage {
 	if trusted {
 		return apitypes.TypedDataMessage{
-			"from":         u.from.Hex(),
-			"to":           u.to.Hex(),
-			"dapp":         u.dapp.Hex(),
-			"control":      u.control.Hex(),
-			"callConfig":   big.NewInt(int64(u.callConfig)),
-			"dappGasLimit": big.NewInt(int64(u.dappGasLimit)),
-			"sessionKey":   u.sessionKey.Hex(),
+			"from":                 u.from.Hex(),
+			"to":                   u.to.Hex(),
+			"dapp":                 u.dapp.Hex(),
+			"control":              u.control.Hex(),
+			"callConfig":           big.NewInt(int64(u.callConfig)),
+			"dappGasLimit":         big.NewInt(int64(u.dappGasLimit)),
+			"solverGasLimit":       big.NewInt(int64(u.solverGasLimit)),
+			"bundlerSurchargeRate": new(big.Int).Set(u.bundlerSurchargeRate),
+			"sessionKey":           u.sessionKey.Hex(),
 		}
 	}
 
 	return apitypes.TypedDataMessage{
-		"from":         u.from.Hex(),
-		"to":           u.to.Hex(),
-		"value":        new(big.Int).Set(u.value),
-		"gas":          new(big.Int).Set(u.gas),
-		"maxFeePerGas": new(big.Int).Set(u.maxFeePerGas),
-		"nonce":        new(big.Int).Set(u.nonce),
-		"deadline":     new(big.Int).Set(u.deadline),
-		"dapp":         u.dapp.Hex(),
-		"control":      u.control.Hex(),
-		"callConfig":   big.NewInt(int64(u.callConfig)),
-		"dappGasLimit": big.NewInt(int64(u.dappGasLimit)),
-		"sessionKey":   u.sessionKey.Hex(),
-		"data":         u.data,
+		"from":                 u.from.Hex(),
+		"to":                   u.to.Hex(),
+		"value":                new(big.Int).Set(u.value),
+		"gas":                  new(big.Int).Set(u.gas),
+		"maxFeePerGas":         new(big.Int).Set(u.maxFeePerGas),
+		"nonce":                new(big.Int).Set(u.nonce),
+		"deadline":             new(big.Int).Set(u.deadline),
+		"dapp":                 u.dapp.Hex(),
+		"control":              u.control.Hex(),
+		"callConfig":           big.NewInt(int64(u.callConfig)),
+		"dappGasLimit":         big.NewInt(int64(u.dappGasLimit)),
+		"solverGasLimit":       big.NewInt(int64(u.solverGasLimit)),
+		"bundlerSurchargeRate": new(big.Int).Set(u.bundlerSurchargeRate),
+		"sessionKey":           u.sessionKey.Hex(),
+		"data":                 u.data,
 	}
 }

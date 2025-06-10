@@ -13,7 +13,7 @@ const (
 	sortBidsFunction = "sortBids"
 )
 
-func (sdk *AtlasSdk) SortSolverOperations(chainId uint64, version *string, userOp types.UserOperation, solverOps types.SolverOperations) (types.SolverOperations, error) {
+func (sdk *AtlasSdk) SortSolverOperations(chainId uint64, version *string, userOp *types.UserOperation, solverOps types.SolverOperations) (types.SolverOperations, error) {
 	ethClient, err := sdk.getEthClient(chainId)
 	if err != nil {
 		return nil, err
@@ -32,7 +32,7 @@ func (sdk *AtlasSdk) SortSolverOperations(chainId uint64, version *string, userO
 	userOp.Sanitize()
 	solverOps.Sanitize()
 
-	pData, err := sorterAbi.Pack(sortBidsFunction, userOp, solverOps)
+	pData, err := sorterAbi.Pack(sortBidsFunction, userOp.ToParams(), solverOps)
 	if err != nil {
 		return nil, fmt.Errorf("failed to pack %s: %w", sortBidsFunction, err)
 	}

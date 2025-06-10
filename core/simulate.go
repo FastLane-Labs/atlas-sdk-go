@@ -11,17 +11,21 @@ import (
 	"github.com/FastLane-Labs/atlas-sdk-go/utils"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
 const (
 	simUserOperationFunction         = "simUserOperation"
 	simSolverCallFunction            = "simSolverCall"
 	minGasBuffer                     = uint64(2_500_000)
-	simGasSuggestedBuffer            = uint64(500_000)
+	simGasSuggestedBuffer            = uint64(170_000)
+	simGasSuggestedBufferMonad       = uint64(300_000)
 	estimateMetacallGasLimitFunction = "estimateMetacallGasLimit"
 )
 
 var (
+	maxUint96, _ = new(big.Int).SetString("79228162514264337593543950335", 10)
+
 	SimulationResult = map[uint8]string{
 		0: "Unknown",
 		1: "VerificationSimFail",
@@ -67,6 +71,13 @@ var (
 		30: "MetacallGasLimitTooLow",
 		31: "MetacallGasLimitTooHigh",
 		32: "DAppGasLimitMismatch",
+		33: "SolverGasLimitMismatch",
+		34: "BundlerSurchargeRateMismatch",
+		35: "ExPostBidsAndMultipleSuccessfulSolversNotSupportedTogether",
+		36: "InvertsBidValueAndMultipleSuccessfulSolversNotSupportedTogether",
+		37: "NeedSolversForMultipleSuccessfulSolvers",
+		38: "SolverCannotBeAuctioneerForMultipleSuccessfulSolvers",
+		39: "CannotRequireFulfillmentForMultipleSuccessfulSolvers",
 	}
 
 	SolverOutcome = map[uint64]string{
@@ -161,7 +172,7 @@ func (e *SolverOperationSimulationError) Error() string {
 	)
 }
 
-func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, userOp types.UserOperation) *UserOperationSimulationError {
+func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, userOp *types.UserOperation) *UserOperationSimulationError {
 	_version := *version
 	if config.IsMonad(chainId) {
 		_version = config.ToMonadVersion(version)
@@ -182,28 +193,41 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 		return &UserOperationSimulationError{err: err}
 	}
 
-	pData, err := simulatorAbi.Pack(simUserOperationFunction, userOp)
+	pData, err := simulatorAbi.Pack(simUserOperationFunction, userOp.ToParams())
 	if err != nil {
 		return &UserOperationSimulationError{err: fmt.Errorf("failed to pack %s: %w", simUserOperationFunction, err)}
 	}
 
 	var (
-		gasLimit   uint64
-		minVersion = config.AtlasV_1_5
+		gasLimit uint64
+		v1_5     = config.AtlasV_1_5
+		v1_6_1   = config.AtlasV_1_6_1
 	)
 
-	gte_1_5, err := config.IsVersionAtLeast(&_version, &minVersion)
+	gte_1_5, err := config.IsVersionAtLeast(&_version, &v1_5)
 	if err != nil {
 		return &UserOperationSimulationError{err: fmt.Errorf("failed to check version: %w", err)}
 	}
 
-	if gte_1_5 {
-		_gasLimit, err := sdk.EstimateMetacallGasLimit(chainId, &_version, userOp, []types.SolverOperation{})
+	gte_1_6_1, err := config.IsVersionAtLeast(&_version, &v1_6_1)
+	if err != nil {
+		return &UserOperationSimulationError{err: fmt.Errorf("failed to check version: %w", err)}
+	}
+
+	if gte_1_6_1 {
+		gasLimit = 0 // Infinite gas, the simulator will figure it out
+	} else if gte_1_5 {
+		_gasLimit, err := sdk.EstimateMetacallGasLimit(chainId, &_version, userOp, types.SolverOperations{}, userOp.GetMaxFeePerGas())
 		if err != nil {
 			return &UserOperationSimulationError{err: fmt.Errorf("failed to estimate metacall gas limit: %w", err)}
 		}
 
-		gasLimit = _gasLimit + simGasSuggestedBuffer
+		buffer := simGasSuggestedBuffer
+		if config.IsMonad(chainId) {
+			buffer = simGasSuggestedBufferMonad
+		}
+
+		gasLimit = _gasLimit + buffer
 	} else {
 		gasLimit = userOp.GetGas().Uint64() + minGasBuffer
 	}
@@ -254,7 +278,7 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 	return nil
 }
 
-func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, userOp types.UserOperation, solverOp *types.SolverOperation, allowTracing bool) (*big.Int, *SolverOperationSimulationError) {
+func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, userOp *types.UserOperation, solverOp *types.SolverOperation, allowTracing bool) (*big.Int, *SolverOperationSimulationError) {
 	_version := *version
 	if config.IsMonad(chainId) {
 		_version = config.ToMonadVersion(version)
@@ -275,12 +299,12 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		return nil, &SolverOperationSimulationError{err: err}
 	}
 
-	dAppOp, err := generateDappOperationForSimulator(chainId, &_version, userOp, solverOp)
+	dAppOp, err := generateDappOperationForSimulator(&_version, userOp, solverOp)
 	if err != nil {
 		return nil, &SolverOperationSimulationError{err: err}
 	}
 
-	pData, err := simulatorAbi.Pack(simSolverCallFunction, userOp, solverOp, dAppOp)
+	pData, err := simulatorAbi.Pack(simSolverCallFunction, userOp.ToParams(), solverOp, dAppOp)
 	if err != nil {
 		return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to pack %s: %w", simSolverCallFunction, err)}
 	}
@@ -291,32 +315,45 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 	}
 
 	var (
-		gasLimit   uint64
-		minVersion = config.AtlasV_1_5
+		gasLimit uint64
+		v1_5     = config.AtlasV_1_5
+		v1_6_1   = config.AtlasV_1_6_1
 	)
 
-	gte_1_5, err := config.IsVersionAtLeast(&_version, &minVersion)
+	gte_1_5, err := config.IsVersionAtLeast(&_version, &v1_5)
 	if err != nil {
 		return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to check version: %w", err)}
 	}
 
-	if gte_1_5 {
-		_gasLimit, err := sdk.EstimateMetacallGasLimit(chainId, &_version, userOp, []types.SolverOperation{*solverOp})
+	gte_1_6_1, err := config.IsVersionAtLeast(&_version, &v1_6_1)
+	if err != nil {
+		return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to check version: %w", err)}
+	}
+
+	if gte_1_6_1 {
+		gasLimit = 0 // Infinite gas, the simulator will figure it out
+	} else if gte_1_5 {
+		_gasLimit, err := sdk.EstimateMetacallGasLimit(chainId, &_version, userOp, types.SolverOperations{solverOp}, gasPrice)
 		if err != nil {
 			return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to estimate metacall gas limit: %w", err)}
 		}
 
-		gasLimit = _gasLimit + simGasSuggestedBuffer
+		buffer := simGasSuggestedBuffer
+		if config.IsMonad(chainId) {
+			buffer = simGasSuggestedBufferMonad
+		}
+
+		gasLimit = _gasLimit + buffer
 	} else {
 		gasBuffer := minGasBuffer
 
-		solverGasLimit, err := sdk.GetDAppSolverGasLimit(chainId, userOp.GetControl())
+		solverGasLimit, err := sdk.GetDAppSolverGasLimit(chainId, &_version, userOp.GetControl())
 		if err != nil {
 			return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to get solver gas limit: %w", err)}
 		}
 
-		if solverGasLimit.Uint64() > gasBuffer {
-			gasBuffer = solverGasLimit.Uint64()
+		if uint64(solverGasLimit) > gasBuffer {
+			gasBuffer = uint64(solverGasLimit)
 		}
 
 		gasLimit = userOp.GetGas().Uint64() + solverOp.Gas.Uint64() + gasBuffer
@@ -334,10 +371,15 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		}
 	)
 
+	exPostBids, err := utils.FlagExPostBids(userOp.GetCallConfig(), &_version)
+	if err != nil {
+		return nil, &SolverOperationSimulationError{err: err}
+	}
+
 	ctx, cancel := NewContextWithNetworkDeadline()
 	defer cancel()
 
-	if !utils.FlagExPostBids(userOp.GetCallConfig(), &_version) || !allowTracing {
+	if !exPostBids || !allowTracing {
 		bData, err = ethClient.CallContract(ctx, callMsg, nil)
 		if err != nil {
 			return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to call %s: %w", simSolverCallFunction, err)}
@@ -382,7 +424,7 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		}
 	}
 
-	if !utils.FlagExPostBids(userOp.GetCallConfig(), &_version) {
+	if !exPostBids {
 		// If ex post bids are not enabled, we can directly return the bid amount
 		return solverOp.BidAmount, nil
 	}
@@ -395,8 +437,13 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 	return exPostBidAmount, nil
 }
 
-func generateDappOperationForSimulator(chainId uint64, version *string, userOp types.UserOperation, solverOp *types.SolverOperation) (*types.DAppOperation, error) {
-	userOpHash, err := userOp.Hash(utils.FlagTrustedOpHash(userOp.GetCallConfig(), version), chainId, version)
+func generateDappOperationForSimulator(version *string, userOp *types.UserOperation, solverOp *types.SolverOperation) (*types.DAppOperation, error) {
+	trustedOpHash, err := utils.FlagTrustedOpHash(userOp.GetCallConfig(), version)
+	if err != nil {
+		return nil, err
+	}
+
+	userOpHash, err := userOp.Hash(trustedOpHash)
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash userOp: %w", err)
 	}
@@ -413,7 +460,12 @@ func generateDappOperationForSimulator(chainId uint64, version *string, userOp t
 		Signature:     []byte(""),
 	}
 
-	if utils.FlagVerifyCallChainHash(userOp.GetCallConfig(), version) {
+	verifyCallChainHash, err := utils.FlagVerifyCallChainHash(userOp.GetCallConfig(), version)
+	if err != nil {
+		return nil, err
+	}
+
+	if verifyCallChainHash {
 		callChainHash, err := CallChainHash(userOp, []*types.SolverOperation{solverOp})
 		if err != nil {
 			return nil, fmt.Errorf("failed to calculate callChainHash: %w", err)
@@ -424,7 +476,7 @@ func generateDappOperationForSimulator(chainId uint64, version *string, userOp t
 	return dAppOp, nil
 }
 
-func (sdk *AtlasSdk) EstimateMetacallGasLimit(chainId uint64, version *string, userOp types.UserOperation, solverOps []types.SolverOperation) (uint64, error) {
+func (sdk *AtlasSdk) EstimateMetacallGasLimit(chainId uint64, version *string, userOp *types.UserOperation, solverOps types.SolverOperations, gasPrice *big.Int) (uint64, error) {
 	minVersion := config.AtlasV_1_5
 	if minSupport, err := config.IsVersionAtLeast(version, &minVersion); err != nil || !minSupport {
 		return 0, fmt.Errorf("metacall gas limit estimation is only supported for Atlas v1.5 and above")
@@ -445,25 +497,38 @@ func (sdk *AtlasSdk) EstimateMetacallGasLimit(chainId uint64, version *string, u
 		return 0, fmt.Errorf("failed to get eth client: %w", err)
 	}
 
-	userOpV15, ok := userOp.(*types.UserOperationV15)
-	if !ok {
-		return 0, fmt.Errorf("metacall gas limit estimation is only supported for UserOperationV1.5")
+	_solverOps := make([]types.SolverOperation, len(solverOps))
+	for i, op := range solverOps {
+		_solverOps[i] = *op
 	}
 
-	pData, err := simulatorAbi.Pack(estimateMetacallGasLimitFunction, userOpV15, solverOps)
+	pData, err := simulatorAbi.Pack(estimateMetacallGasLimitFunction, userOp.ToParams(), _solverOps)
 	if err != nil {
 		return 0, fmt.Errorf("failed to pack %s: %w", estimateMetacallGasLimitFunction, err)
+	}
+
+	overrides := map[common.Address]map[string]interface{}{
+		common.HexToAddress("0x0000000000000000000000000000000000000000"): {
+			"balance": (*hexutil.Big)(maxUint96),
+		},
 	}
 
 	ctx, cancel := NewContextWithNetworkDeadline()
 	defer cancel()
 
-	bData, err := ethClient.CallContract(ctx, ethereum.CallMsg{
-		To:   &simulatorAddr,
-		Data: pData,
-	}, nil)
+	var result string
+	err = ethClient.Client().CallContext(ctx, &result, "eth_call", map[string]interface{}{
+		"to":       simulatorAddr.Hex(),
+		"gasPrice": (*hexutil.Big)(gasPrice),
+		"data":     hexutil.Encode(pData),
+	}, "latest", overrides)
 	if err != nil {
-		return 0, fmt.Errorf("failed to call %s: %w", estimateMetacallGasLimitFunction, err)
+		return 0, fmt.Errorf("failed to call %s: %w - pData %s - simulatorAddr %s", estimateMetacallGasLimitFunction, err, hex.EncodeToString(pData), simulatorAddr.Hex())
+	}
+
+	bData, err := hexutil.Decode(result)
+	if err != nil {
+		return 0, fmt.Errorf("failed to decode result: %w", err)
 	}
 
 	gasLimit, err := simulatorAbi.Unpack(estimateMetacallGasLimitFunction, bData)

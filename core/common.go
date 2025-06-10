@@ -6,7 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
-func CallChainHash(userOp types.UserOperation, solverOps types.SolverOperations) (common.Hash, error) {
+func CallChainHash(userOp *types.UserOperation, solverOps types.SolverOperations) (common.Hash, error) {
 	userOpAbiEncoded, err := userOp.AbiEncode()
 	if err != nil {
 		return common.Hash{}, err

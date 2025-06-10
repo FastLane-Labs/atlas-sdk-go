@@ -1,52 +1,16 @@
 package types
 
-import "github.com/ethereum/go-ethereum/common"
+import (
+	"math/big"
 
-type DAppConfig interface {
-	GetTo() common.Address
-	GetCallConfig() uint32
-	GetBidToken() common.Address
-	GetSolverGasLimit() uint32
-	GetDappGasLimit() uint32
-}
-
-var (
-	_ DAppConfig = &DAppConfigLegacy{}
-	_ DAppConfig = &DAppConfigV15{}
+	"github.com/ethereum/go-ethereum/common"
 )
 
-type DAppConfigLegacy struct {
-	To             common.Address
-	CallConfig     uint32
-	BidToken       common.Address
-	SolverGasLimit uint32
-}
-
-type DAppConfigV15 struct {
-	DAppConfigLegacy
-	DappGasLimit uint32
-}
-
-func (c *DAppConfigV15) GetDappGasLimit() uint32 {
-	return c.DappGasLimit
-}
-
-func (c *DAppConfigLegacy) GetBidToken() common.Address {
-	return c.BidToken
-}
-
-func (c *DAppConfigLegacy) GetSolverGasLimit() uint32 {
-	return c.SolverGasLimit
-}
-
-func (c *DAppConfigLegacy) GetCallConfig() uint32 {
-	return c.CallConfig
-}
-
-func (c *DAppConfigLegacy) GetTo() common.Address {
-	return c.To
-}
-
-func (c *DAppConfigLegacy) GetDappGasLimit() uint32 {
-	return 0
+type DAppConfig struct {
+	To                   common.Address `json:"to"`
+	CallConfig           uint32         `json:"callConfig"`
+	BidToken             common.Address `json:"bidToken"`
+	SolverGasLimit       uint32         `json:"solverGasLimit"`
+	DappGasLimit         uint32         `json:"dappGasLimit"`         // From Atlas v1.5
+	BundlerSurchargeRate *big.Int       `json:"bundlerSurchargeRate"` // From Atlas v1.6
 }

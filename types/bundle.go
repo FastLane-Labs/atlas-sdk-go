@@ -14,19 +14,24 @@ type BundleRaw struct {
 	DAppOperation    *DAppOperationRaw   `json:"dAppOperation"`
 }
 
-func (b *BundleRaw) Decode() *Bundle {
+func (b *BundleRaw) Decode() (*Bundle, error) {
+	userOp, err := b.UserOperation.Decode(b.ChainId.ToInt().Uint64())
+	if err != nil {
+		return nil, err
+	}
+
 	return &Bundle{
 		ChainId:          b.ChainId.ToInt().Uint64(),
-		UserOperation:    b.UserOperation.Decode(),
+		UserOperation:    userOp,
 		SolverOperations: b.SolverOperations.Decode(),
 		DAppOperation:    b.DAppOperation.Decode(),
-	}
+	}, nil
 }
 
 // Internal representation of a bundle
 type Bundle struct {
 	ChainId          uint64
-	UserOperation    UserOperation
+	UserOperation    *UserOperation
 	SolverOperations SolverOperations
 	DAppOperation    *DAppOperation
 }

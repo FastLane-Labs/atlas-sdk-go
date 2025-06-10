@@ -32,7 +32,9 @@ const (
 	AtlasV_1_3       = "1.3"
 	AtlasV_1_5       = "1.5"
 	AtlasV_1_5_MONAD = "1.5-monad"
-	AtlasVLatest     = AtlasV_1_5
+	AtlasV_1_6       = "1.6"
+	AtlasV_1_6_1     = "1.6.1"
+	AtlasVLatest     = AtlasV_1_6_1
 )
 
 var (
@@ -41,7 +43,7 @@ var (
 	initOnce           sync.Once
 	mu                 sync.RWMutex
 
-	allVersions      = []string{AtlasV_1_0, AtlasV_1_1, AtlasV_1_2, AtlasV_1_3, AtlasV_1_5, AtlasV_1_5_MONAD}
+	allVersions      = []string{AtlasV_1_0, AtlasV_1_1, AtlasV_1_2, AtlasV_1_3, AtlasV_1_5, AtlasV_1_5_MONAD, AtlasV_1_6, AtlasV_1_6_1}
 	allMonadVersions = []string{AtlasV_1_5_MONAD}
 )
 
@@ -147,7 +149,13 @@ func GetVersionFromAtlasAddress(chainId uint64, atlasAddr common.Address) (strin
 		}
 
 		if chainConf.Contract.Atlas == atlasAddr {
-			return version, nil
+			v := version
+
+			if IsMonad(chainId) {
+				v = ToMonadVersion(&v)
+			}
+
+			return v, nil
 		}
 	}
 

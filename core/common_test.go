@@ -8,22 +8,30 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func generateUserOperation() types.UserOperation {
-	return &types.UserOperationLegacy{
-		From:         common.HexToAddress("0x1"),
-		To:           common.HexToAddress("0x2"),
-		Deadline:     big.NewInt(100),
-		Gas:          big.NewInt(200),
-		Nonce:        big.NewInt(300),
-		MaxFeePerGas: big.NewInt(400),
-		Value:        big.NewInt(500),
-		Dapp:         common.HexToAddress("0x3"),
-		Control:      common.HexToAddress("0x4"),
-		CallConfig:   600,
-		SessionKey:   common.HexToAddress("0x5"),
-		Data:         []byte("data"),
-		Signature:    []byte("signature"),
+func generateUserOperation() *types.UserOperation {
+	userOp, err := types.NewUserOperation(
+		0,
+		types.UserOperationsParams{
+			From:         common.HexToAddress("0x1"),
+			To:           common.HexToAddress("0x2"),
+			Deadline:     big.NewInt(100),
+			Gas:          big.NewInt(200),
+			Nonce:        big.NewInt(300),
+			MaxFeePerGas: big.NewInt(400),
+			Value:        big.NewInt(500),
+			Dapp:         common.HexToAddress("0x3"),
+			Control:      common.HexToAddress("0x4"),
+			CallConfig:   600,
+			SessionKey:   common.HexToAddress("0x5"),
+			Data:         []byte("data"),
+			Signature:    []byte("signature"),
+		},
+	)
+	if err != nil {
+		panic(err)
 	}
+
+	return userOp
 }
 
 func generateSolverOperation() *types.SolverOperation {
