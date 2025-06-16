@@ -34,7 +34,8 @@ const (
 	AtlasV_1_5_MONAD = "1.5-monad"
 	AtlasV_1_6       = "1.6"
 	AtlasV_1_6_1     = "1.6.1"
-	AtlasVLatest     = AtlasV_1_6_1
+	AtlasV_1_7       = "1.7"
+	AtlasVLatest     = AtlasV_1_7
 )
 
 var (
@@ -43,7 +44,7 @@ var (
 	initOnce           sync.Once
 	mu                 sync.RWMutex
 
-	allVersions      = []string{AtlasV_1_0, AtlasV_1_1, AtlasV_1_2, AtlasV_1_3, AtlasV_1_5, AtlasV_1_5_MONAD, AtlasV_1_6, AtlasV_1_6_1}
+	allVersions      = []string{AtlasV_1_0, AtlasV_1_1, AtlasV_1_2, AtlasV_1_3, AtlasV_1_5, AtlasV_1_5_MONAD, AtlasV_1_6, AtlasV_1_6_1, AtlasV_1_7}
 	allMonadVersions = []string{AtlasV_1_5_MONAD}
 )
 
