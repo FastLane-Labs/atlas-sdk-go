@@ -234,19 +234,23 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 
 	gasPrice := new(big.Int).Set(userOp.GetMaxFeePerGas())
 
+	overrides := map[common.Address]map[string]interface{}{
+		common.HexToAddress("0x0000000000000000000000000000000000000000"): {
+			"balance": (*hexutil.Big)(maxUint96),
+		},
+	}
+
 	ctx, cancel := NewContextWithNetworkDeadline()
 	defer cancel()
 
-	bData, err := ethClient.CallContract(
-		ctx,
-		ethereum.CallMsg{
-			To:        &simulatorAddr,
-			Gas:       gasLimit,
-			GasFeeCap: gasPrice,
-			Value:     new(big.Int).Set(userOp.GetValue()),
-			Data:      pData,
-		},
-		nil)
+	var result string
+	err = ethClient.Client().CallContext(ctx, &result, "eth_call", toCallArg(ethereum.CallMsg{
+		To:        &simulatorAddr,
+		Gas:       gasLimit,
+		GasFeeCap: gasPrice,
+		Value:     new(big.Int).Set(userOp.GetValue()),
+		Data:      pData,
+	}), "latest", overrides)
 	if err != nil {
 		return &UserOperationSimulationError{err: fmt.Errorf(
 			"failed to call %s: %w, simulatorAddr %s, pData %s, version %s, userOp %s, gasLimit %d",
@@ -258,6 +262,11 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 			userOp.EncodeToRaw(),
 			gasLimit,
 		)}
+	}
+
+	bData, err := hexutil.Decode(result)
+	if err != nil {
+		return &UserOperationSimulationError{err: fmt.Errorf("failed to decode result: %w", err)}
 	}
 
 	validOp, err := simulatorAbi.Unpack(simUserOperationFunction, bData)
@@ -376,13 +385,25 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		return nil, &SolverOperationSimulationError{err: err}
 	}
 
+	overrides := map[common.Address]map[string]interface{}{
+		common.HexToAddress("0x0000000000000000000000000000000000000000"): {
+			"balance": (*hexutil.Big)(maxUint96),
+		},
+	}
+
 	ctx, cancel := NewContextWithNetworkDeadline()
 	defer cancel()
 
 	if !exPostBids || !allowTracing {
-		bData, err = ethClient.CallContract(ctx, callMsg, nil)
+		var result string
+		err = ethClient.Client().CallContext(ctx, &result, "eth_call", toCallArg(callMsg), "latest", overrides)
 		if err != nil {
 			return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to call %s: %w", simSolverCallFunction, err)}
+		}
+
+		bData, err = hexutil.Decode(result)
+		if err != nil {
+			return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to decode result: %w", err)}
 		}
 	} else {
 		err = ethClient.Client().CallContext(
