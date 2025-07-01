@@ -1,7 +1,7 @@
 // Code generated - DO NOT EDIT.
 // This file is a generated binding and any manual changes will be lost.
 
-package sorter_1_3
+package sorter_1_6_monad
 
 import (
 	"errors"
@@ -48,24 +48,27 @@ type SolverOperation struct {
 
 // UserOperation is an auto generated low-level Go binding around an user-defined struct.
 type UserOperation struct {
-	From         common.Address
-	To           common.Address
-	Value        *big.Int
-	Gas          *big.Int
-	MaxFeePerGas *big.Int
-	Nonce        *big.Int
-	Deadline     *big.Int
-	Dapp         common.Address
-	Control      common.Address
-	CallConfig   uint32
-	SessionKey   common.Address
-	Data         []byte
-	Signature    []byte
+	From                 common.Address
+	To                   common.Address
+	Value                *big.Int
+	Gas                  *big.Int
+	MaxFeePerGas         *big.Int
+	Nonce                *big.Int
+	Deadline             *big.Int
+	Dapp                 common.Address
+	Control              common.Address
+	CallConfig           uint32
+	DappGasLimit         uint32
+	SolverGasLimit       uint32
+	BundlerSurchargeRate *big.Int
+	SessionKey           common.Address
+	Data                 []byte
+	Signature            []byte
 }
 
 // SorterMetaData contains all meta data concerning the Sorter contract.
 var SorterMetaData = &bind.MetaData{
-	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"_atlas\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"ATLAS\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIAtlas\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"VERIFICATION\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIAtlasVerification\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"sortBids\",\"inputs\":[{\"name\":\"userOp\",\"type\":\"tuple\",\"internalType\":\"structUserOperation\",\"components\":[{\"name\":\"from\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"to\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"value\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"gas\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"maxFeePerGas\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"nonce\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"deadline\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"dapp\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"control\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"callConfig\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"sessionKey\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"data\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"signature\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]},{\"name\":\"solverOps\",\"type\":\"tuple[]\",\"internalType\":\"structSolverOperation[]\",\"components\":[{\"name\":\"from\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"to\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"value\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"gas\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"maxFeePerGas\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"deadline\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"solver\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"control\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"userOpHash\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"bidToken\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"bidAmount\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"data\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"signature\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"outputs\":[{\"name\":\"\",\"type\":\"tuple[]\",\"internalType\":\"structSolverOperation[]\",\"components\":[{\"name\":\"from\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"to\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"value\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"gas\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"maxFeePerGas\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"deadline\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"solver\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"control\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"userOpHash\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"bidToken\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"bidAmount\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"data\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"signature\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"stateMutability\":\"view\"}]",
+	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"atlas\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"ATLAS\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIAtlas\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"POLICY_ID\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint64\",\"internalType\":\"uint64\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"SHMONAD\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIShMonad\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"VERIFICATION\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIAtlasVerification\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"sortBids\",\"inputs\":[{\"name\":\"userOp\",\"type\":\"tuple\",\"internalType\":\"structUserOperation\",\"components\":[{\"name\":\"from\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"to\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"value\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"gas\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"maxFeePerGas\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"nonce\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"deadline\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"dapp\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"control\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"callConfig\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"dappGasLimit\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"solverGasLimit\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"bundlerSurchargeRate\",\"type\":\"uint24\",\"internalType\":\"uint24\"},{\"name\":\"sessionKey\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"data\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"signature\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]},{\"name\":\"solverOps\",\"type\":\"tuple[]\",\"internalType\":\"structSolverOperation[]\",\"components\":[{\"name\":\"from\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"to\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"value\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"gas\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"maxFeePerGas\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"deadline\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"solver\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"control\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"userOpHash\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"bidToken\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"bidAmount\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"data\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"signature\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"outputs\":[{\"name\":\"\",\"type\":\"tuple[]\",\"internalType\":\"structSolverOperation[]\",\"components\":[{\"name\":\"from\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"to\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"value\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"gas\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"maxFeePerGas\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"deadline\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"solver\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"control\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"userOpHash\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"bidToken\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"bidAmount\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"data\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"signature\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"stateMutability\":\"view\"}]",
 }
 
 // SorterABI is the input ABI used to generate the binding from.
@@ -245,6 +248,68 @@ func (_Sorter *SorterCallerSession) ATLAS() (common.Address, error) {
 	return _Sorter.Contract.ATLAS(&_Sorter.CallOpts)
 }
 
+// POLICYID is a free data retrieval call binding the contract method 0xdb4ef9a6.
+//
+// Solidity: function POLICY_ID() view returns(uint64)
+func (_Sorter *SorterCaller) POLICYID(opts *bind.CallOpts) (uint64, error) {
+	var out []interface{}
+	err := _Sorter.contract.Call(opts, &out, "POLICY_ID")
+
+	if err != nil {
+		return *new(uint64), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint64)).(*uint64)
+
+	return out0, err
+
+}
+
+// POLICYID is a free data retrieval call binding the contract method 0xdb4ef9a6.
+//
+// Solidity: function POLICY_ID() view returns(uint64)
+func (_Sorter *SorterSession) POLICYID() (uint64, error) {
+	return _Sorter.Contract.POLICYID(&_Sorter.CallOpts)
+}
+
+// POLICYID is a free data retrieval call binding the contract method 0xdb4ef9a6.
+//
+// Solidity: function POLICY_ID() view returns(uint64)
+func (_Sorter *SorterCallerSession) POLICYID() (uint64, error) {
+	return _Sorter.Contract.POLICYID(&_Sorter.CallOpts)
+}
+
+// SHMONAD is a free data retrieval call binding the contract method 0xae61ebe9.
+//
+// Solidity: function SHMONAD() view returns(address)
+func (_Sorter *SorterCaller) SHMONAD(opts *bind.CallOpts) (common.Address, error) {
+	var out []interface{}
+	err := _Sorter.contract.Call(opts, &out, "SHMONAD")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// SHMONAD is a free data retrieval call binding the contract method 0xae61ebe9.
+//
+// Solidity: function SHMONAD() view returns(address)
+func (_Sorter *SorterSession) SHMONAD() (common.Address, error) {
+	return _Sorter.Contract.SHMONAD(&_Sorter.CallOpts)
+}
+
+// SHMONAD is a free data retrieval call binding the contract method 0xae61ebe9.
+//
+// Solidity: function SHMONAD() view returns(address)
+func (_Sorter *SorterCallerSession) SHMONAD() (common.Address, error) {
+	return _Sorter.Contract.SHMONAD(&_Sorter.CallOpts)
+}
+
 // VERIFICATION is a free data retrieval call binding the contract method 0x791ae748.
 //
 // Solidity: function VERIFICATION() view returns(address)
@@ -276,9 +341,9 @@ func (_Sorter *SorterCallerSession) VERIFICATION() (common.Address, error) {
 	return _Sorter.Contract.VERIFICATION(&_Sorter.CallOpts)
 }
 
-// SortBids is a free data retrieval call binding the contract method 0x3caf7efa.
+// SortBids is a free data retrieval call binding the contract method 0x5d7563f4.
 //
-// Solidity: function sortBids((address,address,uint256,uint256,uint256,uint256,uint256,address,address,uint32,address,bytes,bytes) userOp, (address,address,uint256,uint256,uint256,uint256,address,address,bytes32,address,uint256,bytes,bytes)[] solverOps) view returns((address,address,uint256,uint256,uint256,uint256,address,address,bytes32,address,uint256,bytes,bytes)[])
+// Solidity: function sortBids((address,address,uint256,uint256,uint256,uint256,uint256,address,address,uint32,uint32,uint32,uint24,address,bytes,bytes) userOp, (address,address,uint256,uint256,uint256,uint256,address,address,bytes32,address,uint256,bytes,bytes)[] solverOps) view returns((address,address,uint256,uint256,uint256,uint256,address,address,bytes32,address,uint256,bytes,bytes)[])
 func (_Sorter *SorterCaller) SortBids(opts *bind.CallOpts, userOp UserOperation, solverOps []SolverOperation) ([]SolverOperation, error) {
 	var out []interface{}
 	err := _Sorter.contract.Call(opts, &out, "sortBids", userOp, solverOps)
@@ -293,16 +358,16 @@ func (_Sorter *SorterCaller) SortBids(opts *bind.CallOpts, userOp UserOperation,
 
 }
 
-// SortBids is a free data retrieval call binding the contract method 0x3caf7efa.
+// SortBids is a free data retrieval call binding the contract method 0x5d7563f4.
 //
-// Solidity: function sortBids((address,address,uint256,uint256,uint256,uint256,uint256,address,address,uint32,address,bytes,bytes) userOp, (address,address,uint256,uint256,uint256,uint256,address,address,bytes32,address,uint256,bytes,bytes)[] solverOps) view returns((address,address,uint256,uint256,uint256,uint256,address,address,bytes32,address,uint256,bytes,bytes)[])
+// Solidity: function sortBids((address,address,uint256,uint256,uint256,uint256,uint256,address,address,uint32,uint32,uint32,uint24,address,bytes,bytes) userOp, (address,address,uint256,uint256,uint256,uint256,address,address,bytes32,address,uint256,bytes,bytes)[] solverOps) view returns((address,address,uint256,uint256,uint256,uint256,address,address,bytes32,address,uint256,bytes,bytes)[])
 func (_Sorter *SorterSession) SortBids(userOp UserOperation, solverOps []SolverOperation) ([]SolverOperation, error) {
 	return _Sorter.Contract.SortBids(&_Sorter.CallOpts, userOp, solverOps)
 }
 
-// SortBids is a free data retrieval call binding the contract method 0x3caf7efa.
+// SortBids is a free data retrieval call binding the contract method 0x5d7563f4.
 //
-// Solidity: function sortBids((address,address,uint256,uint256,uint256,uint256,uint256,address,address,uint32,address,bytes,bytes) userOp, (address,address,uint256,uint256,uint256,uint256,address,address,bytes32,address,uint256,bytes,bytes)[] solverOps) view returns((address,address,uint256,uint256,uint256,uint256,address,address,bytes32,address,uint256,bytes,bytes)[])
+// Solidity: function sortBids((address,address,uint256,uint256,uint256,uint256,uint256,address,address,uint32,uint32,uint32,uint24,address,bytes,bytes) userOp, (address,address,uint256,uint256,uint256,uint256,address,address,bytes32,address,uint256,bytes,bytes)[] solverOps) view returns((address,address,uint256,uint256,uint256,uint256,address,address,bytes32,address,uint256,bytes,bytes)[])
 func (_Sorter *SorterCallerSession) SortBids(userOp UserOperation, solverOps []SolverOperation) ([]SolverOperation, error) {
 	return _Sorter.Contract.SortBids(&_Sorter.CallOpts, userOp, solverOps)
 }

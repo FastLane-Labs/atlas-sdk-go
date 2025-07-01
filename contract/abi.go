@@ -13,6 +13,7 @@ import (
 	atlas_1_5 "github.com/FastLane-Labs/atlas-sdk-go/contract/atlas/1.5"
 	atlas_1_5_monad "github.com/FastLane-Labs/atlas-sdk-go/contract/atlas/1.5-monad"
 	atlas_1_6 "github.com/FastLane-Labs/atlas-sdk-go/contract/atlas/1.6"
+	atlas_1_6_monad "github.com/FastLane-Labs/atlas-sdk-go/contract/atlas/1.6-monad"
 
 	atlasverification_1_0 "github.com/FastLane-Labs/atlas-sdk-go/contract/atlasverification/1.0"
 	atlasverification_1_1 "github.com/FastLane-Labs/atlas-sdk-go/contract/atlasverification/1.1"
@@ -21,6 +22,7 @@ import (
 	atlasverification_1_5 "github.com/FastLane-Labs/atlas-sdk-go/contract/atlasverification/1.5"
 	atlasverification_1_5_monad "github.com/FastLane-Labs/atlas-sdk-go/contract/atlasverification/1.5-monad"
 	atlasverification_1_6 "github.com/FastLane-Labs/atlas-sdk-go/contract/atlasverification/1.6"
+	atlasverification_1_6_monad "github.com/FastLane-Labs/atlas-sdk-go/contract/atlasverification/1.6-monad"
 
 	simulator_1_0 "github.com/FastLane-Labs/atlas-sdk-go/contract/simulator/1.0"
 	simulator_1_1 "github.com/FastLane-Labs/atlas-sdk-go/contract/simulator/1.1"
@@ -29,6 +31,7 @@ import (
 	simulator_1_5 "github.com/FastLane-Labs/atlas-sdk-go/contract/simulator/1.5"
 	simulator_1_5_monad "github.com/FastLane-Labs/atlas-sdk-go/contract/simulator/1.5-monad"
 	simulator_1_6 "github.com/FastLane-Labs/atlas-sdk-go/contract/simulator/1.6"
+	simulator_1_6_monad "github.com/FastLane-Labs/atlas-sdk-go/contract/simulator/1.6-monad"
 
 	sorter_1_0 "github.com/FastLane-Labs/atlas-sdk-go/contract/sorter/1.0"
 	sorter_1_1 "github.com/FastLane-Labs/atlas-sdk-go/contract/sorter/1.1"
@@ -37,6 +40,7 @@ import (
 	sorter_1_5 "github.com/FastLane-Labs/atlas-sdk-go/contract/sorter/1.5"
 	sorter_1_5_monad "github.com/FastLane-Labs/atlas-sdk-go/contract/sorter/1.5-monad"
 	sorter_1_6 "github.com/FastLane-Labs/atlas-sdk-go/contract/sorter/1.6"
+	sorter_1_6_monad "github.com/FastLane-Labs/atlas-sdk-go/contract/sorter/1.6-monad"
 
 	dappcontrol_1_5 "github.com/FastLane-Labs/atlas-sdk-go/contract/dappcontrol/1.5"
 	dappcontrol_1_6 "github.com/FastLane-Labs/atlas-sdk-go/contract/dappcontrol/1.6"
@@ -53,6 +57,7 @@ var (
 	atlas_1_5_Abi, _       = atlas_1_5.AtlasMetaData.GetAbi()
 	atlas_1_5_monad_Abi, _ = atlas_1_5_monad.AtlasMetaData.GetAbi()
 	atlas_1_6_Abi, _       = atlas_1_6.AtlasMetaData.GetAbi()
+	atlas_1_6_monad_Abi, _ = atlas_1_6_monad.AtlasMetaData.GetAbi()
 
 	atlasverification_1_0_Abi, _       = atlasverification_1_0.AtlasVerificationMetaData.GetAbi()
 	atlasverification_1_1_Abi, _       = atlasverification_1_1.AtlasVerificationMetaData.GetAbi()
@@ -61,6 +66,7 @@ var (
 	atlasverification_1_5_Abi, _       = atlasverification_1_5.AtlasVerificationMetaData.GetAbi()
 	atlasverification_1_5_monad_Abi, _ = atlasverification_1_5_monad.AtlasVerificationMetaData.GetAbi()
 	atlasverification_1_6_Abi, _       = atlasverification_1_6.AtlasVerificationMetaData.GetAbi()
+	atlasverification_1_6_monad_Abi, _ = atlasverification_1_6_monad.AtlasVerificationMetaData.GetAbi()
 
 	simulator_1_0_Abi, _       = simulator_1_0.SimulatorMetaData.GetAbi()
 	simulator_1_1_Abi, _       = simulator_1_1.SimulatorMetaData.GetAbi()
@@ -69,6 +75,7 @@ var (
 	simulator_1_5_Abi, _       = simulator_1_5.SimulatorMetaData.GetAbi()
 	simulator_1_5_monad_Abi, _ = simulator_1_5_monad.SimulatorMetaData.GetAbi()
 	simulator_1_6_Abi, _       = simulator_1_6.SimulatorMetaData.GetAbi()
+	simulator_1_6_monad_Abi, _ = simulator_1_6_monad.SimulatorMetaData.GetAbi()
 
 	sorter_1_0_Abi, _       = sorter_1_0.SorterMetaData.GetAbi()
 	sorter_1_1_Abi, _       = sorter_1_1.SorterMetaData.GetAbi()
@@ -77,6 +84,7 @@ var (
 	sorter_1_5_Abi, _       = sorter_1_5.SorterMetaData.GetAbi()
 	sorter_1_5_monad_Abi, _ = sorter_1_5_monad.SorterMetaData.GetAbi()
 	sorter_1_6_Abi, _       = sorter_1_6.SorterMetaData.GetAbi()
+	sorter_1_6_monad_Abi, _ = sorter_1_6_monad.SorterMetaData.GetAbi()
 
 	dappcontrol_legacy_Abi, _ = dappcontrol_legacy.DAppControlMetaData.GetAbi()
 	dappcontrol_1_5_Abi, _    = dappcontrol_1_5.DAppControlMetaData.GetAbi()
@@ -103,8 +111,10 @@ func GetAtlasAbi(version *string) (*abi.ABI, error) {
 		return atlas_1_5_Abi, nil
 	case config.AtlasV_1_5_MONAD:
 		return atlas_1_5_monad_Abi, nil
-	case config.AtlasV_1_6, config.AtlasV_1_6_1:
+	case config.AtlasV_1_6, config.AtlasV_1_6_1, config.AtlasV_1_7:
 		return atlas_1_6_Abi, nil
+	case config.AtlasV_1_6_1_MONAD:
+		return atlas_1_6_monad_Abi, nil
 	}
 	return nil, errInvalidAtlasVersion
 }
@@ -123,8 +133,10 @@ func GetAtlasVerificationAbi(version *string) (*abi.ABI, error) {
 		return atlasverification_1_5_Abi, nil
 	case config.AtlasV_1_5_MONAD:
 		return atlasverification_1_5_monad_Abi, nil
-	case config.AtlasV_1_6, config.AtlasV_1_6_1:
+	case config.AtlasV_1_6, config.AtlasV_1_6_1, config.AtlasV_1_7:
 		return atlasverification_1_6_Abi, nil
+	case config.AtlasV_1_6_1_MONAD:
+		return atlasverification_1_6_monad_Abi, nil
 	}
 	return nil, errInvalidAtlasVersion
 }
@@ -143,8 +155,10 @@ func GetSimulatorAbi(version *string) (*abi.ABI, error) {
 		return simulator_1_5_Abi, nil
 	case config.AtlasV_1_5_MONAD:
 		return simulator_1_5_monad_Abi, nil
-	case config.AtlasV_1_6, config.AtlasV_1_6_1:
+	case config.AtlasV_1_6, config.AtlasV_1_6_1, config.AtlasV_1_7:
 		return simulator_1_6_Abi, nil
+	case config.AtlasV_1_6_1_MONAD:
+		return simulator_1_6_monad_Abi, nil
 	}
 	return nil, errInvalidAtlasVersion
 }
@@ -163,8 +177,10 @@ func GetSorterAbi(version *string) (*abi.ABI, error) {
 		return sorter_1_5_Abi, nil
 	case config.AtlasV_1_5_MONAD:
 		return sorter_1_5_monad_Abi, nil
-	case config.AtlasV_1_6, config.AtlasV_1_6_1:
+	case config.AtlasV_1_6, config.AtlasV_1_6_1, config.AtlasV_1_7:
 		return sorter_1_6_Abi, nil
+	case config.AtlasV_1_6_1_MONAD:
+		return sorter_1_6_monad_Abi, nil
 	}
 	return nil, errInvalidAtlasVersion
 }
@@ -175,7 +191,9 @@ func GetDAppControlAbi(version *string) (*abi.ABI, error) {
 		return dappcontrol_legacy_Abi, nil
 	case config.AtlasV_1_5, config.AtlasV_1_5_MONAD:
 		return dappcontrol_1_5_Abi, nil
-	case config.AtlasV_1_6, config.AtlasV_1_6_1:
+	case config.AtlasV_1_6, config.AtlasV_1_6_1, config.AtlasV_1_7:
+		return dappcontrol_1_6_Abi, nil
+	case config.AtlasV_1_6_1_MONAD:
 		return dappcontrol_1_6_Abi, nil
 	}
 	return nil, errInvalidAtlasVersion
