@@ -78,18 +78,54 @@ const (
 	IndexV16MultipleSuccessfulSolvers
 )
 
+// v1.6.2 config
+const (
+	IndexV162UserNoncesSequential = uint32(iota)
+	IndexV162DappNoncesSequential
+	IndexV162RequirePreOps
+	IndexV162TrackPreOpsReturnData
+	IndexV162TrackUserReturnData
+	IndexV162DelegateUser
+	IndexV162RequirePreSolver
+	IndexV162RequirePostSolver
+	IndexV162ZeroSolvers
+	IndexV162ReuseUserOp
+	IndexV162UserAuctioneer
+	IndexV162SolverAuctioneer
+	IndexV162UnknownAuctioneer
+	IndexV162VerifyCallChainHash
+	IndexV162ForwardReturnData
+	IndexV162RequireFulfillment
+	IndexV162TrustedOpHash
+	IndexV162InvertBidValue
+	IndexV162ExPostBids
+	IndexV162MultipleSuccessfulSolvers
+	IndexV162CheckMetacallGasLimit
+)
+
 var (
 	legacy = "legacy"
 	v1_5   = config.AtlasV_1_5
 	v1_6   = config.AtlasV_1_6
+	v1_6_2 = config.AtlasV_1_6_2
 
 	ErrCallConfigNotAvailableInLtV15 = errors.New("call config not available in atlas lower than v1.5")
 	ErrCallConfigNotAvailableInV15   = errors.New("call config not available in atlas v1.5")
 	ErrCallConfigNotAvailableInV16   = errors.New("call config not available in atlas v1.6")
+	ErrCallConfigNotAvailableInV162  = errors.New("call config not available in atlas v1.6.2")
 )
 
 func VersionAtLeast(v *string) (string, error) {
 	_v := config.GetVersion(v)
+
+	gte_1_6_2, err := config.IsVersionAtLeast(&_v, &v1_6_2)
+	if err != nil {
+		return "", err
+	}
+
+	if gte_1_6_2 {
+		return v1_6_2, nil
+	}
 
 	gte_1_6, err := config.IsVersionAtLeast(&_v, &v1_6)
 	if err != nil {
@@ -121,6 +157,8 @@ func FlagUserNoncesSequential(callConfig uint32, version *string) (bool, error) 
 	var idx uint32
 
 	switch _versionAtLeast {
+	case v1_6_2:
+		idx = IndexV162UserNoncesSequential
 	case v1_6:
 		idx = IndexV16UserNoncesSequential
 	case v1_5:
@@ -141,6 +179,8 @@ func FlagDappNoncesSequential(callConfig uint32, version *string) (bool, error) 
 	var idx uint32
 
 	switch _versionAtLeast {
+	case v1_6_2:
+		idx = IndexV162DappNoncesSequential
 	case v1_6:
 		idx = IndexV16DappNoncesSequential
 	case v1_5:
@@ -161,6 +201,8 @@ func FlagRequirePreOps(callConfig uint32, version *string) (bool, error) {
 	var idx uint32
 
 	switch _versionAtLeast {
+	case v1_6_2:
+		idx = IndexV162RequirePreOps
 	case v1_6:
 		idx = IndexV16RequirePreOps
 	case v1_5:
@@ -181,6 +223,8 @@ func FlagTrackPreOpsReturnData(callConfig uint32, version *string) (bool, error)
 	var idx uint32
 
 	switch _versionAtLeast {
+	case v1_6_2:
+		idx = IndexV162TrackPreOpsReturnData
 	case v1_6:
 		idx = IndexV16TrackPreOpsReturnData
 	case v1_5:
@@ -201,6 +245,8 @@ func FlagTrackUserReturnData(callConfig uint32, version *string) (bool, error) {
 	var idx uint32
 
 	switch _versionAtLeast {
+	case v1_6_2:
+		idx = IndexV162TrackUserReturnData
 	case v1_6:
 		idx = IndexV16TrackUserReturnData
 	case v1_5:
@@ -221,6 +267,8 @@ func FlagDelegateUser(callConfig uint32, version *string) (bool, error) {
 	var idx uint32
 
 	switch _versionAtLeast {
+	case v1_6_2:
+		idx = IndexV162DelegateUser
 	case v1_6:
 		idx = IndexV16DelegateUser
 	case v1_5:
@@ -241,6 +289,8 @@ func FlagRequirePreSolver(callConfig uint32, version *string) (bool, error) {
 	var idx uint32
 
 	switch _versionAtLeast {
+	case v1_6_2:
+		idx = IndexV162RequirePreSolver
 	case v1_6:
 		idx = IndexV16RequirePreSolver
 	case v1_5:
@@ -261,6 +311,8 @@ func FlagRequirePostSolver(callConfig uint32, version *string) (bool, error) {
 	var idx uint32
 
 	switch _versionAtLeast {
+	case v1_6_2:
+		idx = IndexV162RequirePostSolver
 	case v1_6:
 		idx = IndexV16RequirePostSolver
 	case v1_5:
@@ -281,6 +333,8 @@ func FlagRequirePostOps(callConfig uint32, version *string) (bool, error) {
 	var idx uint32
 
 	switch _versionAtLeast {
+	case v1_6_2:
+		return false, ErrCallConfigNotAvailableInV162
 	case v1_6:
 		return false, ErrCallConfigNotAvailableInV16
 	case v1_5:
@@ -301,6 +355,8 @@ func FlagZeroSolvers(callConfig uint32, version *string) (bool, error) {
 	var idx uint32
 
 	switch _versionAtLeast {
+	case v1_6_2:
+		idx = IndexV162ZeroSolvers
 	case v1_6:
 		idx = IndexV16ZeroSolvers
 	case v1_5:
@@ -321,6 +377,8 @@ func FlagReuseUserOp(callConfig uint32, version *string) (bool, error) {
 	var idx uint32
 
 	switch _versionAtLeast {
+	case v1_6_2:
+		idx = IndexV162ReuseUserOp
 	case v1_6:
 		idx = IndexV16ReuseUserOp
 	case v1_5:
@@ -341,6 +399,8 @@ func FlagUserAuctioneer(callConfig uint32, version *string) (bool, error) {
 	var idx uint32
 
 	switch _versionAtLeast {
+	case v1_6_2:
+		idx = IndexV162UserAuctioneer
 	case v1_6:
 		idx = IndexV16UserAuctioneer
 	case v1_5:
@@ -361,6 +421,8 @@ func FlagSolverAuctioneer(callConfig uint32, version *string) (bool, error) {
 	var idx uint32
 
 	switch _versionAtLeast {
+	case v1_6_2:
+		idx = IndexV162SolverAuctioneer
 	case v1_6:
 		idx = IndexV16SolverAuctioneer
 	case v1_5:
@@ -381,6 +443,8 @@ func FlagUnknownAuctioneer(callConfig uint32, version *string) (bool, error) {
 	var idx uint32
 
 	switch _versionAtLeast {
+	case v1_6_2:
+		idx = IndexV162UnknownAuctioneer
 	case v1_6:
 		idx = IndexV16UnknownAuctioneer
 	case v1_5:
@@ -401,6 +465,8 @@ func FlagVerifyCallChainHash(callConfig uint32, version *string) (bool, error) {
 	var idx uint32
 
 	switch _versionAtLeast {
+	case v1_6_2:
+		idx = IndexV162VerifyCallChainHash
 	case v1_6:
 		idx = IndexV16VerifyCallChainHash
 	case v1_5:
@@ -421,6 +487,8 @@ func FlagForwardReturnData(callConfig uint32, version *string) (bool, error) {
 	var idx uint32
 
 	switch _versionAtLeast {
+	case v1_6_2:
+		idx = IndexV162ForwardReturnData
 	case v1_6:
 		idx = IndexV16ForwardReturnData
 	case v1_5:
@@ -441,6 +509,8 @@ func FlagRequireFulfillment(callConfig uint32, version *string) (bool, error) {
 	var idx uint32
 
 	switch _versionAtLeast {
+	case v1_6_2:
+		idx = IndexV162RequireFulfillment
 	case v1_6:
 		idx = IndexV16RequireFulfillment
 	case v1_5:
@@ -461,6 +531,8 @@ func FlagTrustedOpHash(callConfig uint32, version *string) (bool, error) {
 	var idx uint32
 
 	switch _versionAtLeast {
+	case v1_6_2:
+		idx = IndexV162TrustedOpHash
 	case v1_6:
 		idx = IndexV16TrustedOpHash
 	case v1_5:
@@ -481,6 +553,8 @@ func FlagInvertBidValue(callConfig uint32, version *string) (bool, error) {
 	var idx uint32
 
 	switch _versionAtLeast {
+	case v1_6_2:
+		idx = IndexV162InvertBidValue
 	case v1_6:
 		idx = IndexV16InvertBidValue
 	case v1_5:
@@ -501,6 +575,8 @@ func FlagExPostBids(callConfig uint32, version *string) (bool, error) {
 	var idx uint32
 
 	switch _versionAtLeast {
+	case v1_6_2:
+		idx = IndexV162ExPostBids
 	case v1_6:
 		idx = IndexV16ExPostBids
 	case v1_5:
@@ -521,6 +597,8 @@ func FlagAllowAllocateValueFailure(callConfig uint32, version *string) (bool, er
 	var idx uint32
 
 	switch _versionAtLeast {
+	case v1_6_2:
+		return false, ErrCallConfigNotAvailableInV162
 	case v1_6:
 		return false, ErrCallConfigNotAvailableInV16
 	case v1_5:
@@ -541,8 +619,32 @@ func FlagMultipleSuccessfulSolvers(callConfig uint32, version *string) (bool, er
 	var idx uint32
 
 	switch _versionAtLeast {
+	case v1_6_2:
+		idx = IndexV162MultipleSuccessfulSolvers
 	case v1_6:
 		idx = IndexV16MultipleSuccessfulSolvers
+	case v1_5:
+		return false, ErrCallConfigNotAvailableInV15
+	default:
+		return false, ErrCallConfigNotAvailableInLtV15
+	}
+
+	return callConfig&(1<<idx) != 0, nil
+}
+
+func FlagCheckMetacallGasLimit(callConfig uint32, version *string) (bool, error) {
+	_versionAtLeast, err := VersionAtLeast(version)
+	if err != nil {
+		return false, err
+	}
+
+	var idx uint32
+
+	switch _versionAtLeast {
+	case v1_6_2:
+		idx = IndexV162CheckMetacallGasLimit
+	case v1_6:
+		return false, ErrCallConfigNotAvailableInV16
 	case v1_5:
 		return false, ErrCallConfigNotAvailableInV15
 	default:
