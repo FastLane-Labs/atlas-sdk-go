@@ -259,7 +259,7 @@ func (u *UserOperation) SetSignature(signature []byte) {
 
 func (u *UserOperation) Sanitize() {
 	switch u.versionAtLeast {
-	case config.AtlasV_1_6:
+	case config.AtlasV_1_6, config.AtlasV_1_6_2:
 		if u.bundlerSurchargeRate == nil {
 			u.bundlerSurchargeRate = big.NewInt(0)
 		}
@@ -335,7 +335,7 @@ func (u *UserOperation) EncodeToRaw() *UserOperationRaw {
 	}
 
 	switch u.versionAtLeast {
-	case config.AtlasV_1_6:
+	case config.AtlasV_1_6, config.AtlasV_1_6_2:
 		r.SolverGasLimit = (*hexutil.Big)(big.NewInt(int64(u.solverGasLimit)))
 		r.BundlerSurchargeRate = (*hexutil.Big)(u.bundlerSurchargeRate)
 		fallthrough
@@ -393,7 +393,7 @@ func (u *UserOperation) AbiEncode() ([]byte, error) {
 	u.Sanitize()
 
 	switch u.versionAtLeast {
-	case config.AtlasV_1_6:
+	case config.AtlasV_1_6, config.AtlasV_1_6_2:
 		return userOpArgsV16.Pack(u.ToParams())
 
 	case config.AtlasV_1_5:
@@ -406,7 +406,7 @@ func (u *UserOperation) AbiEncode() ([]byte, error) {
 
 func (u *UserOperation) toTypedDataTypes(trusted bool) apitypes.Types {
 	switch u.versionAtLeast {
-	case config.AtlasV_1_6:
+	case config.AtlasV_1_6, config.AtlasV_1_6_2:
 		return u.toTypedDataTypesV16(trusted)
 
 	case config.AtlasV_1_5:
@@ -421,7 +421,7 @@ func (u *UserOperation) toTypedDataMessage(trusted bool) apitypes.TypedDataMessa
 	u.Sanitize()
 
 	switch u.versionAtLeast {
-	case config.AtlasV_1_6:
+	case config.AtlasV_1_6, config.AtlasV_1_6_2:
 		return u.toTypedDataMessageV16(trusted)
 
 	case config.AtlasV_1_5:
@@ -514,7 +514,7 @@ func (u *UserOperationRaw) Decode(chainId uint64) (*UserOperation, error) {
 	}
 
 	switch versionAtLeast {
-	case config.AtlasV_1_6:
+	case config.AtlasV_1_6, config.AtlasV_1_6_2:
 		params.SolverGasLimit = uint32(u.SolverGasLimit.ToInt().Uint64())
 		params.BundlerSurchargeRate = u.BundlerSurchargeRate.ToInt()
 		fallthrough
