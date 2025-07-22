@@ -113,7 +113,7 @@ func GetAtlasAbi(version *string) (*abi.ABI, error) {
 		return atlas_1_5_monad_Abi, nil
 	case config.AtlasV_1_6, config.AtlasV_1_6_1, config.AtlasV_1_6_2, config.AtlasV_1_7:
 		return atlas_1_6_Abi, nil
-	case config.AtlasV_1_6_1_MONAD:
+	case config.AtlasV_1_6_1_MONAD, config.AtlasV_1_6_3_MONAD:
 		return atlas_1_6_monad_Abi, nil
 	}
 	return nil, errInvalidAtlasVersion
@@ -135,7 +135,7 @@ func GetAtlasVerificationAbi(version *string) (*abi.ABI, error) {
 		return atlasverification_1_5_monad_Abi, nil
 	case config.AtlasV_1_6, config.AtlasV_1_6_1, config.AtlasV_1_6_2, config.AtlasV_1_7:
 		return atlasverification_1_6_Abi, nil
-	case config.AtlasV_1_6_1_MONAD:
+	case config.AtlasV_1_6_1_MONAD, config.AtlasV_1_6_3_MONAD:
 		return atlasverification_1_6_monad_Abi, nil
 	}
 	return nil, errInvalidAtlasVersion
@@ -157,7 +157,7 @@ func GetSimulatorAbi(version *string) (*abi.ABI, error) {
 		return simulator_1_5_monad_Abi, nil
 	case config.AtlasV_1_6, config.AtlasV_1_6_1, config.AtlasV_1_6_2, config.AtlasV_1_7:
 		return simulator_1_6_Abi, nil
-	case config.AtlasV_1_6_1_MONAD:
+	case config.AtlasV_1_6_1_MONAD, config.AtlasV_1_6_3_MONAD:
 		return simulator_1_6_monad_Abi, nil
 	}
 	return nil, errInvalidAtlasVersion
@@ -179,7 +179,7 @@ func GetSorterAbi(version *string) (*abi.ABI, error) {
 		return sorter_1_5_monad_Abi, nil
 	case config.AtlasV_1_6, config.AtlasV_1_6_1, config.AtlasV_1_6_2, config.AtlasV_1_7:
 		return sorter_1_6_Abi, nil
-	case config.AtlasV_1_6_1_MONAD:
+	case config.AtlasV_1_6_1_MONAD, config.AtlasV_1_6_3_MONAD:
 		return sorter_1_6_monad_Abi, nil
 	}
 	return nil, errInvalidAtlasVersion
@@ -193,7 +193,7 @@ func GetDAppControlAbi(version *string) (*abi.ABI, error) {
 		return dappcontrol_1_5_Abi, nil
 	case config.AtlasV_1_6, config.AtlasV_1_6_1, config.AtlasV_1_6_2, config.AtlasV_1_7:
 		return dappcontrol_1_6_Abi, nil
-	case config.AtlasV_1_6_1_MONAD:
+	case config.AtlasV_1_6_1_MONAD, config.AtlasV_1_6_3_MONAD:
 		return dappcontrol_1_6_Abi, nil
 	}
 	return nil, errInvalidAtlasVersion

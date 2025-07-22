@@ -36,6 +36,7 @@ const (
 	AtlasV_1_6_1       = "1.6.1"
 	AtlasV_1_6_1_MONAD = "1.6.1-monad"
 	AtlasV_1_6_2       = "1.6.2"
+	AtlasV_1_6_3_MONAD = "1.6.3-monad"
 	AtlasV_1_7         = "1.7"
 	AtlasVLatest       = AtlasV_1_7
 )
@@ -58,6 +59,7 @@ var (
 		AtlasV_1_6_1,
 		AtlasV_1_6_1_MONAD,
 		AtlasV_1_6_2,
+		AtlasV_1_6_3_MONAD,
 		AtlasV_1_7,
 	}
 
@@ -65,6 +67,7 @@ var (
 	allMonadVersions = []string{
 		AtlasV_1_5_MONAD,
 		AtlasV_1_6_1_MONAD,
+		AtlasV_1_6_3_MONAD,
 	}
 )
 
