@@ -35,8 +35,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/DataDog/zstd v1.4.5 h1:EndNeuB0l9syBZhut0wns3gV1hL8zX8LIu6ZiVHWLIQ=
 github.com/DataDog/zstd v1.4.5/go.mod h1:1jcaCB/ufaK+sKp1NBhlGmpz41jOoPQ35bpF36t7BBo=
-github.com/FastLane-Labs/blockchain-rpc-go v0.0.0-20250113074257-15a9dd51b250 h1:LpbfeaXji3JDgZqcfZhMHhFjbj3f8OZkBFrTfff/O8Y=
-github.com/FastLane-Labs/blockchain-rpc-go v0.0.0-20250113074257-15a9dd51b250/go.mod h1:jAOZczlxGSDVYOLjyktrAhUcPpcZMmQc3iFSM0CIL+8=
+github.com/FastLane-Labs/blockchain-rpc-go v0.0.0-20250724123457-4a1e04e947ab h1:TAnTHWZzgdtnz1hXLsNz44sCoiVP0glMq7XH1FS6M6Y=
+github.com/FastLane-Labs/blockchain-rpc-go v0.0.0-20250724123457-4a1e04e947ab/go.mod h1:R6JL9ELSC+Z3YYtXmolFndHTTv+TtBAB3tNyG9bGsqA=
 github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERoyfY=
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
 github.com/StackExchange/wmi v1.2.1 h1:VIkavFPXSjcnS+O8yTq7NI32k0R5Aj+v39y29VYDOSA=
