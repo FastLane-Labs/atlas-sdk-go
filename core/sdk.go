@@ -52,6 +52,8 @@ func NewAtlasSdk(rpcClients []interface{}, chainOverrides map[uint64]map[string]
 			client = v
 		case *rpc.RpcClient:
 			client = eth.NewClient(v)
+		case *rpc.MultiRpcClient:
+			client = eth.NewClient(v)
 		case *gethRpc.Client:
 			client = eth.NewClient(v)
 		case *gethEthClient.Client:
