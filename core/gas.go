@@ -146,7 +146,13 @@ func (sdk *AtlasSdk) EstimateMetacallGasLimitLocal(chainId uint64, version *stri
 	metacallCalldataGas := (solverDataLenSum + (_SOLVER_OP_STATIC_LENGTH * solverOpsLen)) * _GAS_PER_CALLDATA_BYTE
 	metacallCalldataGas += nonSolverCalldataLength * _GAS_PER_CALLDATA_BYTE
 
-	metacallExecutionGas := _BASE_TX_GAS_USED + _PRE_EXECUTE_METACALL_GAS + _POST_SETTLE_METACALL_GAS + userOp.GetGas().Uint64() + uint64(userOp.GetDappGasLimit()) + allSolversExecutionGas + (_EXECUTE_SOLVER_OVERHEAD * solverOpsLen)
+	executeSolverOverhead := _EXECUTE_SOLVER_OVERHEAD * solverOpsLen
+	if config.IsMonad(chainId) {
+		// On Monad, the _EXECUTE_SOLVER_OVERHEAD per solverOp is not included in the suggested gas limit.
+		executeSolverOverhead = 0
+	}
+
+	metacallExecutionGas := _BASE_TX_GAS_USED + _PRE_EXECUTE_METACALL_GAS + _POST_SETTLE_METACALL_GAS + userOp.GetGas().Uint64() + uint64(userOp.GetDappGasLimit()) + allSolversExecutionGas + executeSolverOverhead
 
 	exPostBids, err := utils.FlagExPostBids(userOp.GetCallConfig(), version)
 	if err != nil {
