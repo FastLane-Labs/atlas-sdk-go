@@ -309,7 +309,7 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		return nil, &SolverOperationSimulationError{err: err}
 	}
 
-	dAppOp, err := generateDappOperationForSimulator(&_version, userOp, solverOp)
+	dAppOp, err := generateDappOperationForSimulator(&_version, userOp, solverOp, bundler)
 	if err != nil {
 		return nil, &SolverOperationSimulationError{err: err}
 	}
@@ -460,7 +460,7 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 	return exPostBidAmount, nil
 }
 
-func generateDappOperationForSimulator(version *string, userOp *types.UserOperation, solverOp *types.SolverOperation) (*types.DAppOperation, error) {
+func generateDappOperationForSimulator(version *string, userOp *types.UserOperation, solverOp *types.SolverOperation, bundler common.Address) (*types.DAppOperation, error) {
 	trustedOpHash, err := utils.FlagTrustedOpHash(userOp.GetCallConfig(), version)
 	if err != nil {
 		return nil, err
@@ -477,7 +477,7 @@ func generateDappOperationForSimulator(version *string, userOp *types.UserOperat
 		Nonce:         big.NewInt(0),
 		Deadline:      userOp.GetDeadline(),
 		Control:       userOp.GetControl(),
-		Bundler:       common.Address{},
+		Bundler:       bundler,
 		UserOpHash:    userOpHash,
 		CallChainHash: common.Hash{},
 		Signature:     []byte(""),
