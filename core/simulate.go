@@ -172,7 +172,7 @@ func (e *SolverOperationSimulationError) Error() string {
 	)
 }
 
-func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, userOp *types.UserOperation) *UserOperationSimulationError {
+func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, userOp *types.UserOperation, bundler common.Address) *UserOperationSimulationError {
 	_version := *version
 	if config.IsMonad(chainId) {
 		_version = config.ToMonadVersion(version)
@@ -235,7 +235,7 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 	gasPrice := new(big.Int).Set(userOp.GetMaxFeePerGas())
 
 	overrides := map[common.Address]map[string]interface{}{
-		common.HexToAddress("0x0000000000000000000000000000000000000000"): {
+		bundler: {
 			"balance": (*hexutil.Big)(maxUint96),
 		},
 	}
@@ -245,6 +245,7 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 
 	var result string
 	err = ethClient.Client().CallContext(ctx, &result, "eth_call", toCallArg(ethereum.CallMsg{
+		From:      bundler,
 		To:        &simulatorAddr,
 		Gas:       gasLimit,
 		GasFeeCap: gasPrice,
@@ -287,7 +288,7 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 	return nil
 }
 
-func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, userOp *types.UserOperation, solverOp *types.SolverOperation, allowTracing bool) (*big.Int, *SolverOperationSimulationError) {
+func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, userOp *types.UserOperation, solverOp *types.SolverOperation, bundler common.Address, allowTracing bool) (*big.Int, *SolverOperationSimulationError) {
 	_version := *version
 	if config.IsMonad(chainId) {
 		_version = config.ToMonadVersion(version)
@@ -372,6 +373,7 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		bData       []byte
 		traceResult callFrame
 		callMsg     = ethereum.CallMsg{
+			From:      bundler,
 			To:        &simulatorAddr,
 			Gas:       gasLimit,
 			GasFeeCap: gasPrice,
@@ -386,7 +388,7 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 	}
 
 	overrides := map[common.Address]map[string]interface{}{
-		common.HexToAddress("0x0000000000000000000000000000000000000000"): {
+		bundler: {
 			"balance": (*hexutil.Big)(maxUint96),
 		},
 	}
