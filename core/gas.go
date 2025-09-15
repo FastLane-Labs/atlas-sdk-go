@@ -35,10 +35,10 @@ var (
 		98867:    {}, // Plume Testnet
 		10:       {}, // Optimism
 		11155420: {}, // Optimism Sepolia
-		8453:     {}, // Base
-		84532:    {}, // Base Sepolia
-		130:      {}, // Unichain
-		1301:     {}, // Unichain Testnet
+		// 8453:     {}, // Base
+		// 84532:    {}, // Base Sepolia
+		130:  {}, // Unichain
+		1301: {}, // Unichain Testnet
 	}
 )
 
