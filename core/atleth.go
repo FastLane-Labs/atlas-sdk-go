@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"math/big"
+	"strings"
 
 	"github.com/FastLane-Labs/atlas-sdk-go/config"
 	"github.com/FastLane-Labs/atlas-sdk-go/contract"
@@ -23,6 +24,12 @@ func (sdk *AtlasSdk) GetBalanceOfBondedAtlEth(chainId uint64, version *string, a
 		return nil, err
 	}
 
+	// Get the actual version that will be used (with fallback logic)
+	chainConf, err := config.GetChainConfig(chainId, version)
+	if err != nil {
+		return nil, err
+	}
+
 	var (
 		_abi        *abi.ABI
 		destination common.Address
@@ -30,10 +37,12 @@ func (sdk *AtlasSdk) GetBalanceOfBondedAtlEth(chainId uint64, version *string, a
 		args        []interface{}
 	)
 
-	if config.IsMonad(chainId) {
-		_version := config.ToMonadVersion(version)
+	// Try to determine if this is a Monad version by checking if MonadConfig exists
+	actualVersion, err := config.GetVersionFromAtlasAddress(chainId, chainConf.Contract.Atlas)
+	isMonadVersion := err == nil && config.IsMonad(chainId) && strings.HasSuffix(actualVersion, "-monad")
 
-		monadConfig, err := sdk.GetMonadConfig(chainId, &_version)
+	if isMonadVersion {
+		monadConfig, err := sdk.GetMonadConfig(chainId, &actualVersion)
 		if err != nil {
 			return nil, err
 		}
