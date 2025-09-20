@@ -173,9 +173,15 @@ func (e *SolverOperationSimulationError) Error() string {
 }
 
 func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, userOp *types.UserOperation, bundler common.Address) *UserOperationSimulationError {
-	_version := *version
-	if config.IsMonad(chainId) {
-		_version = config.ToMonadVersion(version)
+	// Get the actual resolved version (let GetChainConfig handle fallback logic)
+	chainConf, err := config.GetChainConfig(chainId, version)
+	if err != nil {
+		return &UserOperationSimulationError{err: err}
+	}
+
+	_version, err := config.GetVersionFromAtlasAddress(chainId, chainConf.Contract.Atlas)
+	if err != nil {
+		return &UserOperationSimulationError{err: err}
 	}
 
 	ethClient, err := sdk.getEthClient(chainId)
@@ -289,9 +295,15 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 }
 
 func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, userOp *types.UserOperation, solverOp *types.SolverOperation, bundler common.Address, allowTracing bool) (*big.Int, *SolverOperationSimulationError) {
-	_version := *version
-	if config.IsMonad(chainId) {
-		_version = config.ToMonadVersion(version)
+	// Get the actual resolved version (let GetChainConfig handle fallback logic)
+	chainConf, err := config.GetChainConfig(chainId, version)
+	if err != nil {
+		return nil, &SolverOperationSimulationError{err: err}
+	}
+
+	_version, err := config.GetVersionFromAtlasAddress(chainId, chainConf.Contract.Atlas)
+	if err != nil {
+		return nil, &SolverOperationSimulationError{err: err}
 	}
 
 	ethClient, err := sdk.getEthClient(chainId)

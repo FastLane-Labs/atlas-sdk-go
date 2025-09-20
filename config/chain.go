@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 	"slices"
+	"strings"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -124,13 +125,6 @@ func InitChainConfig() error {
 
 		for chainId, config := range remoteConfig {
 			chainConfig[chainId] = config
-
-			if IsMonad(chainId) {
-				for version := range config {
-					monadVersion := ToMonadVersion(&version)
-					chainConfig[chainId][monadVersion] = config[version]
-				}
-			}
 		}
 	})
 
@@ -168,20 +162,12 @@ func GetVersionFromAtlasAddress(chainId uint64, atlasAddr common.Address) (strin
 	mu.RLock()
 	defer mu.RUnlock()
 
-	for _, version := range allVersions {
-		chainConf, ok := chainConfig[chainId][version]
-		if !ok {
-			continue
-		}
-
+	// Check all available versions in the config
+	for version := range chainConfig[chainId] {
+		chainConf := chainConfig[chainId][version]
 		if chainConf.Contract.Atlas == atlasAddr {
-			v := version
-
-			if IsMonad(chainId) {
-				v = ToMonadVersion(&v)
-			}
-
-			return v, nil
+			// Return the actual version key from config
+			return version, nil
 		}
 	}
 
@@ -198,19 +184,28 @@ func GetChainConfig(chainId uint64, version *string) (*ChainConfig, error) {
 
 	v := GetVersion(version)
 
-	if IsMonad(chainId) {
-		v = ToMonadVersion(&v)
-	}
-
+	// Try exact version first
 	mu.RLock()
-	defer mu.RUnlock()
-
 	_chainConfig, ok := chainConfig[chainId][v]
-	if !ok {
-		return nil, fmt.Errorf("chain config not found for chain id %d and version %s", chainId, v)
+	mu.RUnlock()
+
+	if ok {
+		return _chainConfig, nil
 	}
 
-	return _chainConfig, nil
+	// If on Monad and version not found, try with -monad suffix
+	if IsMonad(chainId) && !strings.HasSuffix(v, "-monad") {
+		monadV := ToMonadVersion(&v)
+		mu.RLock()
+		_chainConfig, ok = chainConfig[chainId][monadV]
+		mu.RUnlock()
+
+		if ok {
+			return _chainConfig, nil
+		}
+	}
+
+	return nil, fmt.Errorf("chain config not found for chain id %d and version %s", chainId, v)
 }
 
 func OverrideChainConfig(chainId uint64, version *string, config *ChainConfig) error {
