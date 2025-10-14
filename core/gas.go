@@ -28,11 +28,11 @@ const (
 
 var (
 	excludedOffchainChainIds = map[uint64]struct{}{
-		// 42161:    {}, // Arbitrum One
-		// 421614:   {}, // Arbitrum Sepolia
-		// 42170:    {}, // Arbitrum Nova
-		// 98866:    {}, // Plume
-		// 98867:    {}, // Plume Testnet
+		42161:  {}, // Arbitrum One
+		421614: {}, // Arbitrum Sepolia
+		42170:  {}, // Arbitrum Nova
+		98866:  {}, // Plume
+		98867:  {}, // Plume Testnet
 		// 10:       {}, // Optimism
 		// 11155420: {}, // Optimism Sepolia
 		// 8453:     {}, // Base
