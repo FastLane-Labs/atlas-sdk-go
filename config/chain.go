@@ -39,6 +39,7 @@ const (
 	AtlasV_1_6_2       = "1.6.2"
 	AtlasV_1_6_3       = "1.6.3"
 	AtlasV_1_6_3_MONAD = "1.6.3-monad"
+	AtlasV_1_6_4       = "1.6.4"
 	AtlasV_1_7         = "1.7"
 	AtlasVLatest       = AtlasV_1_7
 )
@@ -63,6 +64,7 @@ var (
 		AtlasV_1_6_2,
 		AtlasV_1_6_3,
 		AtlasV_1_6_3_MONAD,
+		AtlasV_1_6_4,
 		AtlasV_1_7,
 	}
 
