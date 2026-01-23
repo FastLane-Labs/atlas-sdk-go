@@ -5,6 +5,20 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
+const (
+	BSC_MAINNET_CHAIN_ID = 56
+	BSC_TESTNET_CHAIN_ID = 97
+)
+
+func IsEip1559Chain(chainId uint64) bool {
+	switch chainId {
+	case BSC_MAINNET_CHAIN_ID, BSC_TESTNET_CHAIN_ID:
+		return false
+	default:
+		return true
+	}
+}
+
 // Copy pasted from Geth, can't use it directly because it's not exported
 func toCallArg(msg ethereum.CallMsg) interface{} {
 	arg := map[string]interface{}{

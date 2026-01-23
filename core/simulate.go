@@ -238,7 +238,16 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 		gasLimit = userOp.GetGas().Uint64() + minGasBuffer
 	}
 
-	gasPrice := new(big.Int).Set(userOp.GetMaxFeePerGas())
+	var (
+		gasPrice  *big.Int
+		gasFeeCap *big.Int
+	)
+
+	if IsEip1559Chain(chainId) {
+		gasFeeCap = new(big.Int).Set(userOp.GetMaxFeePerGas())
+	} else {
+		gasPrice = new(big.Int).Set(userOp.GetMaxFeePerGas())
+	}
 
 	overrides := map[common.Address]map[string]interface{}{
 		bundler: {
@@ -254,7 +263,8 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 		From:      bundler,
 		To:        &simulatorAddr,
 		Gas:       gasLimit,
-		GasFeeCap: gasPrice,
+		GasPrice:  gasPrice,
+		GasFeeCap: gasFeeCap,
 		Value:     new(big.Int).Set(userOp.GetValue()),
 		Data:      pData,
 	}), "latest", overrides)
@@ -287,7 +297,7 @@ func (sdk *AtlasSdk) SimulateUserOperation(chainId uint64, version *string, user
 		return &UserOperationSimulationError{
 			Result:           result,
 			ValidCallsResult: uint8(validCallResult.Uint64()),
-			Data:             hex.EncodeToString(pData) + fmt.Sprintf(", simulatorAddr %s, version %s, gasLimit %d, gasPrice %s, rawReturnData %s", simulatorAddr.Hex(), _version, gasLimit, gasPrice.String(), hex.EncodeToString(bData)),
+			Data:             hex.EncodeToString(pData) + fmt.Sprintf(", simulatorAddr %s, version %s, gasLimit %d, gasPrice %s, gasFeeCap %s, rawReturnData %s", simulatorAddr.Hex(), _version, gasLimit, gasPrice.String(), gasFeeCap.String(), hex.EncodeToString(bData)),
 		}
 	}
 
@@ -331,9 +341,21 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to pack %s: %w", simSolverCallFunction, err)}
 	}
 
-	gasPrice := new(big.Int).Set(userOp.GetMaxFeePerGas())
-	if solverOp.MaxFeePerGas.Cmp(userOp.GetMaxFeePerGas()) > 0 {
-		gasPrice.Set(solverOp.MaxFeePerGas)
+	var (
+		gasPrice  *big.Int
+		gasFeeCap *big.Int
+	)
+
+	if IsEip1559Chain(chainId) {
+		gasFeeCap = new(big.Int).Set(userOp.GetMaxFeePerGas())
+		if solverOp.MaxFeePerGas.Cmp(userOp.GetMaxFeePerGas()) > 0 {
+			gasFeeCap.Set(solverOp.MaxFeePerGas)
+		}
+	} else {
+		gasPrice = new(big.Int).Set(userOp.GetMaxFeePerGas())
+		if solverOp.MaxFeePerGas.Cmp(userOp.GetMaxFeePerGas()) > 0 {
+			gasPrice.Set(solverOp.MaxFeePerGas)
+		}
 	}
 
 	var (
@@ -355,7 +377,15 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 	if gte_1_6_1 {
 		gasLimit = 0 // Infinite gas, the simulator will figure it out
 	} else if gte_1_5 {
-		_gasLimit, err := sdk.EstimateMetacallGasLimit(chainId, &_version, userOp, types.SolverOperations{solverOp}, gasPrice)
+		var gp *big.Int
+
+		if gasPrice != nil {
+			gp = gasPrice
+		} else {
+			gp = gasFeeCap
+		}
+
+		_gasLimit, err := sdk.EstimateMetacallGasLimit(chainId, &_version, userOp, types.SolverOperations{solverOp}, gp)
 		if err != nil {
 			return nil, &SolverOperationSimulationError{err: fmt.Errorf("failed to estimate metacall gas limit: %w", err)}
 		}
@@ -385,12 +415,13 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		bData       []byte
 		traceResult callFrame
 		callMsg     = ethereum.CallMsg{
-			From:     bundler,
-			To:       &simulatorAddr,
-			Gas:      gasLimit,
-			GasPrice: gasPrice,
-			Value:    new(big.Int).Set(userOp.GetValue()),
-			Data:     pData,
+			From:      bundler,
+			To:        &simulatorAddr,
+			Gas:       gasLimit,
+			GasPrice:  gasPrice,
+			GasFeeCap: gasFeeCap,
+			Value:     new(big.Int).Set(userOp.GetValue()),
+			Data:      pData,
 		}
 	)
 
@@ -455,7 +486,7 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 		return nil, &SolverOperationSimulationError{
 			Result:        result,
 			SolverOutcome: solverOutcomeResult.Uint64(),
-			Data:          hex.EncodeToString(pData) + fmt.Sprintf(", simulatorAddr %s, version %s, gasLimit %d, gasPrice %s, rawReturnData %s", simulatorAddr.Hex(), _version, gasLimit, gasPrice.String(), hex.EncodeToString(bData)),
+			Data:          hex.EncodeToString(pData) + fmt.Sprintf(", simulatorAddr %s, version %s, gasLimit %d, gasPrice %s, gasFeeCap %s, rawReturnData %s", simulatorAddr.Hex(), _version, gasLimit, gasPrice.String(), gasFeeCap.String(), hex.EncodeToString(bData)),
 		}
 	}
 
