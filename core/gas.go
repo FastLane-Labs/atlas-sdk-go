@@ -88,15 +88,22 @@ func (sdk *AtlasSdk) estimateMetacallGasLimit(chainId uint64, version *string, u
 		},
 	}
 
+	args := map[string]interface{}{
+		"to":   simulatorAddr.Hex(),
+		"data": hexutil.Encode(pData),
+	}
+
+	if IsEip1559Chain(chainId) {
+		args["maxFeePerGas"] = (*hexutil.Big)(gasPrice)
+	} else {
+		args["gasPrice"] = (*hexutil.Big)(gasPrice)
+	}
+
 	ctx, cancel := NewContextWithNetworkDeadline()
 	defer cancel()
 
 	var result string
-	err = ethClient.Client().CallContext(ctx, &result, "eth_call", map[string]interface{}{
-		"to":       simulatorAddr.Hex(),
-		"gasPrice": (*hexutil.Big)(gasPrice),
-		"data":     hexutil.Encode(pData),
-	}, "latest", overrides)
+	err = ethClient.Client().CallContext(ctx, &result, "eth_call", args, "latest", overrides)
 	if err != nil {
 		return 0, fmt.Errorf("failed to call %s: %w - pData %s - simulatorAddr %s", estimateMetacallGasLimitFunction, err, hex.EncodeToString(pData), simulatorAddr.Hex())
 	}
