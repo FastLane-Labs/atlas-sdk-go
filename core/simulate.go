@@ -348,14 +348,8 @@ func (sdk *AtlasSdk) SimulateSolverOperation(chainId uint64, version *string, us
 
 	if IsEip1559Chain(chainId) {
 		gasFeeCap = new(big.Int).Set(userOp.GetMaxFeePerGas())
-		if solverOp.MaxFeePerGas.Cmp(userOp.GetMaxFeePerGas()) > 0 {
-			gasFeeCap.Set(solverOp.MaxFeePerGas)
-		}
 	} else {
 		gasPrice = new(big.Int).Set(userOp.GetMaxFeePerGas())
-		if solverOp.MaxFeePerGas.Cmp(userOp.GetMaxFeePerGas()) > 0 {
-			gasPrice.Set(solverOp.MaxFeePerGas)
-		}
 	}
 
 	var (
